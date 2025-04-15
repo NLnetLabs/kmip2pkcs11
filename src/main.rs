@@ -7,9 +7,11 @@ use core::net::SocketAddr;
 use std::io::ErrorKind;
 use std::sync::Arc;
 
-use anyhow::Result;
 use clap::Parser;
-use config::Cfg;
+use config::{Cfg, ServerSettings};
+use daemonbase::error::{ExitError, Failed};
+use daemonbase::logging::Logger;
+use daemonbase::process::Process;
 use kmip::Config;
 use kmip::types::common::{Operation, UniqueIdentifier};
 use kmip::types::request::RequestMessage;
@@ -28,26 +30,37 @@ use tokio_rustls::TlsAcceptor;
 use tokio_rustls::server::TlsStream;
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    env_logger::init();
+async fn main() -> Result<(), ExitError> {
+    Logger::init_logging()?;
 
     let cfg = Cfg::parse();
+    let log = Logger::from_config(&cfg.log.to_config())?;
+    let mut process = Process::from_config(cfg.process.into_config());
 
-    let certs =
-        CertificateDer::pem_file_iter(&cfg.server_cert_path)?.collect::<Result<Vec<_>, _>>()?;
-    let key = PrivateKeyDer::from_pem_file(&cfg.server_key_path)?;
+    log.switch_logging(cfg.detach)?;
+    process.setup_daemon(cfg.detach)?;
+
+    let certs = CertificateDer::pem_file_iter(&cfg.server.cert_path)
+        .map_err(|_| Failed)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| Failed)?;
+    let key = PrivateKeyDer::from_pem_file(&cfg.server.key_path).map_err(|_| Failed)?;
 
     let config = rustls::ServerConfig::builder()
         .with_no_client_auth()
         .with_single_cert(certs, key)
         .unwrap();
     let acceptor = TlsAcceptor::from(Arc::new(config));
-    let listener = TcpListener::bind("127.0.0.1:1818").await?;
+    let listener = TcpListener::bind("127.0.0.1:1818")
+        .await
+        .map_err(|_| Failed)?;
+
+    process.drop_privileges()?;
 
     loop {
-        let (stream, peer_addr) = listener.accept().await?;
+        let (stream, peer_addr) = listener.accept().await.map_err(|_| Failed)?;
         let acceptor = acceptor.clone();
-        let cfg = cfg.clone();
+        let cfg = cfg.server.clone();
 
         eprintln!("Accepting");
         tokio::spawn(async move {
@@ -61,8 +74,8 @@ async fn main() -> Result<()> {
 async fn process_stream(
     mut stream: TlsStream<TcpStream>,
     peer_addr: SocketAddr,
-    cfg: Cfg,
-) -> anyhow::Result<()> {
+    cfg: ServerSettings,
+) -> Result<(), ExitError> {
     let reader_config = Config::new();
     let pp = PrettyPrinter::new().with_tag_prefix("4200".into());
 

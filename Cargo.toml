@@ -1,0 +1,28 @@
+[package]
+name = "kmip2pkcs11"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ximon Eighteen <ximon.eighteen@gmail.com>"]
+description = "KMIP to PKCS#11 proxy"
+repository = "https://github.com/NLnetLabs/kmip2pkcs11proxy/"
+keywords = ["KMIP", "PKCS#11"]
+categories = ["cryptography"]
+readme = "README.md"
+
+[dependencies]
+anyhow = "1.0"
+cryptoki = "^0.9"
+env_logger = "0.9"
+hex = "0.4"
+kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", version = "0.4.0", default-features = false, features = [
+    "async-with-tokio",
+    "high-level",
+] }
+kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
+    "tls-with-tokio-rustls",
+] }
+log = "0.4"
+clap = { version = "4.5", features = ["derive"] }
+tokio = { version = "1.44.2", features = ["macros", "net", "rt-multi-thread"] }
+rustls = "0.23.26"
+tokio-rustls = "0.26.2"

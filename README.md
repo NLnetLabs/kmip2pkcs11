@@ -8,7 +8,7 @@ This Rust application accepts [KMIP](https://groups.oasis-open.org/communities/t
 
 ### Intended use case: shielding an application against an untrusted PKCS#11 library
 
-The use case for which this application is primarily being developed is to enable an application that wishes to make use of a Hardware Security Module (HSM) via a PKCS#11 or KMIP interface to do so without having to load an untrusted 3rd party PKCS#11 library into its process.
+The use case for which this application is primarily being developed is to enable an application that wishes to make use of a Hardware Security Module (HSM) via a PKCS#11 interface to do so without having to load an untrusted 3rd party PKCS#11 library into its process.
 
 This is particularly important for a Rust application as the PKCS#11 interface exposes the application to code that is likely not protected by the guarantees provided by the Rust compiler, as often PKCS#11 libraries are written in the C language.
 

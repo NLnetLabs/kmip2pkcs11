@@ -30,6 +30,8 @@ This application is possible thanks to the following foundational Rust crates on
 - [kmip-ttlv](https://crates.io/crates/kmip-ttlv)
 - [cryptoki](https://crates.io/crates/cryptoki)
 
+The code of the [keyls](https://github.com/ximon18/keyls) served as a very useful starting point as it already supported both KMIP and PKCS#11 albeit only as a client and not as a server.
+
 # Prerequisites
 
 - A TLS certificate and key such as the example ones available here: https://github.com/rustls/hyper-rustls/blob/main/examples/. Note: This application may be updated in future to use a pre-shared key approach instead.

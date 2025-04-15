@@ -26,9 +26,11 @@ This application also currently only supports KMIP via the TCP+TLS+TTLV transpor
 
 This application is possible thanks to the following foundational Rust crates on which it builds:
 
+- [cryptoki](https://crates.io/crates/cryptoki)
 - [kmip-protocol](https://crates.io/crates/kmip-protocol)
 - [kmip-ttlv](https://crates.io/crates/kmip-ttlv)
-- [cryptoki](https://crates.io/crates/cryptoki)
+- [rustls](https://crates.io/crates/rustls)
+- [tokio](https://crates.io/crates/tokio)
 
 The code of the [keyls](https://github.com/ximon18/keyls) served as a very useful starting point as it already supported both KMIP and PKCS#11 albeit only as a client and not as a server.
 

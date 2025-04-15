@@ -1,4 +1,4 @@
-> (!) _This project is at an experimental stage and is very much a work-in-progress. It should not be used in production deployents at this time. Furthermore the functionality and interfaces offered should be considered unstable._
+> (!) _This project is at an experimental stage and is very much a work-in-progress. It should not be used in production deployments at this time. Furthermore the functionality and interfaces offered should be considered unstable._
 
 # KMIP to PKCS#11 bridge
 

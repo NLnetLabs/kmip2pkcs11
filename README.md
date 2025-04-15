@@ -44,7 +44,7 @@ The following operations are supported by this application at present:
 
 | KMIP Operation | PKCS#11 Function  | Limitations |
 | -------------- | ----------------- | ----------- |
-| Locate         | `C_FindObjects()` | KMIP request payload fields are currently ignored. Will locate PKCS#11 objects having class `PUBLIC_KEY` or `PRIVATE_KEY`. |
+| [Locate](https://docs.oasis-open.org/kmip/spec/v1.0/os/kmip-spec-1.0-os.html#_Toc262581216)         | [`C_FindObjects()`](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html#_Toc323205460) | KMIP request payload fields are currently ignored. Will locate PKCS#11 objects having class `PUBLIC_KEY` or `PRIVATE_KEY`. |
 
 # Usage
 

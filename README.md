@@ -38,6 +38,14 @@ The code of the [keyls](https://github.com/ximon18/keyls) served as a very usefu
 
 - A PKCS#11 library and associated HSM to interact with, either a real hardware device or a virtual HSM such as https://www.softhsm.org/.
 
+# Supported operations
+
+The following operations are supported by this application at present:
+
+| KMIP Operation | PKCS#11 Function  | Limitations |
+| -------------- | ----------------- | ----------- |
+| Locate         | `C_FindObjects()` | KMIP request payload fields are currently ignored. Will locate PKCS#11 objects having class `PUBLIC_KEY` or `PRIVATE_KEY`. |
+
 # Usage
 
 ```

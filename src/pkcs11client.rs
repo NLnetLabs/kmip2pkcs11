@@ -1,17 +1,15 @@
-use anyhow::{Result, bail};
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
     object::{Attribute, AttributeType, ObjectClass, ObjectHandle},
     session::{Session, UserType},
     slot::Slot,
 };
+use log::error;
 
-use crate::{
-    config::Cfg,
-    key::{Key, KeyType},
-};
+use crate::config::ServerSettings;
+use crate::key::{Key, KeyType};
 
-pub(crate) fn get_keys(cfg: &Cfg) -> Result<Vec<Key>> {
+pub(crate) fn get_keys(cfg: &ServerSettings) -> Result<Vec<Key>, cryptoki::error::Error> {
     let pkcs11 = Pkcs11::new(&cfg.lib_path)?;
     pkcs11.initialize(CInitializeArgs::OsThreads)?;
 
@@ -49,7 +47,7 @@ pub(crate) fn get_keys(cfg: &Cfg) -> Result<Vec<Key>> {
     Ok(keys)
 }
 
-fn get_key(session: &Session, key_handle: ObjectHandle) -> Result<Key> {
+fn get_key(session: &Session, key_handle: ObjectHandle) -> Result<Key, cryptoki::error::Error> {
     let mut key = Key {
         id: Default::default(),
         typ: KeyType::Private,
@@ -75,7 +73,8 @@ fn get_key(session: &Session, key_handle: ObjectHandle) -> Result<Key> {
                 } else if class == ObjectClass::PUBLIC_KEY {
                     key.typ = KeyType::Public;
                 } else {
-                    bail!("Unsupported object class");
+                    error!("Unsupported object class");
+                    return Err(cryptoki::error::Error::InvalidValue);
                 }
             }
             Attribute::Id(id) => {
@@ -103,7 +102,7 @@ fn get_key(session: &Session, key_handle: ObjectHandle) -> Result<Key> {
     Ok(key)
 }
 
-fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> Result<Slot> {
+fn get_slot(pkcs11: &Pkcs11, cfg: &ServerSettings) -> Result<Slot, cryptoki::error::Error> {
     fn has_token_label(pkcs11: &Pkcs11, slot: Slot, slot_label: &str) -> bool {
         pkcs11
             .get_token_info(slot)
@@ -119,7 +118,13 @@ fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> Result<Slot> {
                 .find(|&slot| slot.id() == *id)
             {
                 Some(slot) => slot,
-                None => bail!("Cannot find slot with id {}", id),
+                None => {
+                    error!("Cannot find slot with id {}", id);
+                    return Err(cryptoki::error::Error::Pkcs11(
+                        cryptoki::error::RvError::SlotIdInvalid,
+                        cryptoki::context::Function::GetSlotList,
+                    ));
+                }
             }
         }
         (None, Some(label)) => {
@@ -129,11 +134,29 @@ fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> Result<Slot> {
                 .find(|&slot| has_token_label(pkcs11, slot, label))
             {
                 Some(slot) => slot,
-                None => bail!("Cannot find slot with label '{}'", label),
+                None => {
+                    error!("Cannot find slot with label '{}'", label);
+                    return Err(cryptoki::error::Error::Pkcs11(
+                        cryptoki::error::RvError::SlotIdInvalid,
+                        cryptoki::context::Function::GetSlotList,
+                    ));
+                }
             }
         }
-        (Some(_), Some(_)) => bail!("Cannot specify both slot id and slot label"),
-        (None, None) => bail!("Must specify at least one of slot id or slot label"),
+        (Some(_), Some(_)) => {
+            error!("Cannot specify both slot id and slot label");
+            return Err(cryptoki::error::Error::Pkcs11(
+                cryptoki::error::RvError::SlotIdInvalid,
+                cryptoki::context::Function::GetSlotList,
+            ));
+        }
+        (None, None) => {
+            error!("Must specify at least one of slot id or slot label");
+            return Err(cryptoki::error::Error::Pkcs11(
+                cryptoki::error::RvError::SlotIdInvalid,
+                cryptoki::context::Function::GetSlotList,
+            ));
+        }
     };
 
     Ok(slot)

@@ -2,7 +2,7 @@
 
 # KMIP to PKCS#11 bridge
 
-This Rust application accepts [KMIP](https://groups.oasis-open.org/communities/tc-community-home2?CommunityKey=39d0c648-0a66-4f46-b343-018dc7d3f19c) requests, converts them to [PKCS#11](https://groups.oasis-open.org/communities/tc-community-home2?CommunityKey=922ef643-1e10-4d65-a5ea-018dc7d3f0a4) format and executes them against a loaded PKCS#11 library.
+This Rust application accepts [KMIP](https://groups.oasis-open.org/communities/tc-community-home2?CommunityKey=39d0c648-0a66-4f46-b343-018dc7d3f19c) requests, converts them to [PKCS#11](https://groups.oasis-open.org/communities/tc-community-home2?CommunityKey=922ef643-1e10-4d65-a5ea-018dc7d3f0a4) format and executes them against a loaded PKCS#11 library, thereby enabling [Nameshed](https://github.com/NLnetLabs/nameshed) to safely communicate with a PKCS#11 capable HSM without loading untrusted 3rd party PKCS#11 library code into the nameshed process.
 
 ## Use cases
 

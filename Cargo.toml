@@ -12,17 +12,20 @@ readme = "README.md"
 [dependencies]
 anyhow = "1.0"
 cryptoki = "^0.9"
-env_logger = "0.9"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 hex = "0.4"
 kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", version = "0.4.0", default-features = false, features = [
+# kmip-ttlv = { path = "../kmip-ttlv2", default-features = false, features = [
     "async-with-tokio",
     "high-level",
 ] }
 kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
+# kmip = { path = "../kmip-protocol3", package = "kmip-protocol", version = "0.5", default-features = false, features = [
     "tls-with-tokio-rustls",
 ] }
 log = "0.4"
 clap = { version = "4.5", features = ["derive"] }
+rpki = { version = "0.18", features = ["crypto"] }
 tokio = { version = "1.44.2", features = ["macros", "net", "rt-multi-thread"] }
 rustls = "0.23.26"
 tokio-rustls = "0.26.2"

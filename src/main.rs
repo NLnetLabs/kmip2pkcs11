@@ -1,35 +1,34 @@
+// TODO: Ensure clients can distinguish a problem with the relay vs a problem
+// with the underlying PKCS#11 token.
+mod client_request_handler;
 mod config;
-mod key;
+mod kmip;
 mod pkcs11client;
 
-use core::net::SocketAddr;
-
-use std::io::ErrorKind;
 use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
 use config::Cfg;
-use kmip::Config;
-use kmip::types::common::{Operation, UniqueIdentifier};
-use kmip::types::request::RequestMessage;
-use kmip::types::response::ResultStatus;
-use kmip::types::response::{
-    BatchItem, LocateResponsePayload, ProtocolVersion, ResponseHeader, ResponseMessage,
-    ResponsePayload,
-};
-use kmip_ttlv::PrettyPrinter;
-use log::{debug, error, info, trace, warn};
+use log::{error, info};
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use tokio::io::AsyncWriteExt;
-use tokio::net::{TcpListener, TcpStream};
+use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
-use tokio_rustls::server::TlsStream;
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::fmt::format::FmtSpan;
+
+use crate::client_request_handler::handle_client_requests;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    env_logger::init();
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_thread_ids(true)
+        .without_time()
+        .with_span_events(FmtSpan::ENTER)
+        .try_init()
+        .ok();
 
     let cfg = Cfg::parse();
 
@@ -49,97 +48,21 @@ async fn main() -> Result<()> {
         let acceptor = acceptor.clone();
         let cfg = cfg.clone();
 
-        eprintln!("Accepting");
+        info!("Waiting for connections...");
         tokio::spawn(async move {
-            let stream = acceptor.accept(stream).await.unwrap();
-            eprintln!("Processing");
-            process_stream(stream, peer_addr, cfg).await.unwrap();
+            match acceptor.accept(stream).await {
+                Ok(stream) => {
+                    info!("Accepting connection from {peer_addr}");
+                    if let Err(err) = handle_client_requests(stream, peer_addr, cfg).await {
+                        error!("Connection with {peer_addr} terminated abnormally: {err}");
+                    } else {
+                        info!("Connection with {peer_addr} terminated");
+                    }
+                }
+                Err(err) => {
+                    error!("Error accepting connection: {err}");
+                }
+            }
         });
-    }
-}
-
-async fn process_stream(
-    mut stream: TlsStream<TcpStream>,
-    peer_addr: SocketAddr,
-    cfg: Cfg,
-) -> anyhow::Result<()> {
-    let reader_config = Config::new();
-    let pp = PrettyPrinter::new().with_tag_prefix("4200".into());
-
-    loop {
-        if let Err(err) = stream.get_ref().0.readable().await {
-            // Don't warn about client disconnection.
-            // TODO: Categorize the various std::io::ErrorKinds into fatal and
-            // non-fatal variants and only abort on fatal errors.
-            if err.kind() != ErrorKind::UnexpectedEof {
-                warn!("Closing connection with client {peer_addr} due to error: {err}");
-                return Ok(());
-            }
-        }
-
-        let (req, _cap): (RequestMessage, Vec<u8>) =
-            match kmip_ttlv::from_reader(&mut stream, &reader_config).await {
-                Ok((res, cap)) => (res, cap),
-                Err((err, cap)) => {
-                    error!("Error while parsing KMIP request: {err}");
-                    debug!("KMIP TTLV: {}", pp.to_diag_string(&cap));
-                    continue;
-                    // TODO: Return a KMIP error to the client.
-                }
-            };
-
-        for batch_item in req.batch_items() {
-            info!(
-                "Processing batch item operation {} from client {peer_addr}",
-                batch_item.operation()
-            );
-            match batch_item.operation() {
-                Operation::Locate => {
-                    // TODO: Factor code out into helper function(s).
-                    let keys = pkcs11client::get_keys(&cfg).unwrap();
-
-                    let payload = ResponsePayload::Locate(LocateResponsePayload {
-                        located_items: Some(keys.len() as i32),
-                        unique_identifiers: if keys.is_empty() {
-                            None
-                        } else {
-                            Some(
-                                keys.iter()
-                                    .map(|k| UniqueIdentifier(k.id.clone()))
-                                    .collect(),
-                            )
-                        },
-                    });
-
-                    let resp = ResponseMessage {
-                        header: ResponseHeader {
-                            protocol_version: ProtocolVersion {
-                                major: req.0.0.0.0,
-                                minor: req.0.0.1.0,
-                            },
-                            timestamp: 0,
-                            batch_count: 1,
-                        },
-                        batch_items: vec![BatchItem {
-                            operation: Some(batch_item.operation()).copied(),
-                            unique_batch_item_id: batch_item.unique_batch_item_id().cloned(),
-                            result_status: ResultStatus::Success,
-                            result_reason: None,
-                            result_message: None,
-                            payload: Some(payload),
-                            message_extension: None,
-                        }],
-                    };
-
-                    let ttlv = kmip_ttlv::ser::to_vec(&resp).unwrap();
-                    trace!("DIAG: {}", pp.to_diag_string(&ttlv));
-                    stream.write_all(&ttlv).await.unwrap();
-                }
-                _ => {
-                    // TODO: Support more operations.
-                    // TODO: Respond with unsupported error to the client.
-                }
-            }
-        }
     }
 }

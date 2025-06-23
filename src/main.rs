@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
         .with_single_cert(certs, key)
         .unwrap();
     let acceptor = TlsAcceptor::from(Arc::new(config));
-    let listener = TcpListener::bind("127.0.0.1:1818").await?;
+    let listener = TcpListener::bind(format!("{}:{}", cfg.server_addr, cfg.server_port)).await?;
 
     loop {
         let (stream, peer_addr) = listener.accept().await?;

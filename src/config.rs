@@ -15,6 +15,14 @@ pub struct Cfg {
     #[arg(long = "server-key")]
     pub server_key_path: PathBuf,
 
+    /// IP address or hostname to listen on
+    #[arg(long = "server-addr", default_value = "localhost")]
+    pub server_addr: String,
+
+    /// TCP port to listen on
+    #[arg(long = "server-port", default_value_t = 5696)]
+    pub server_port: u16,
+
     #[arg(long)]
     pub lib_path: PathBuf,
 

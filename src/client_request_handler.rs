@@ -72,8 +72,6 @@ pub async fn handle_client_requests(
                         batch_item.operation()
                     );
 
-                    dbg!(&batch_item);
-
                     let res = match batch_item.operation() {
                         Operation::Activate => activate::op(&cfg, batch_item),
                         Operation::CreateKeyPair => create_key_pair::op(&cfg, batch_item),

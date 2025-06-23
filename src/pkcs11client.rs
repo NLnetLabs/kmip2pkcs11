@@ -575,7 +575,7 @@ pub fn sign(
     let res = session.find_objects(&[Attribute::Id(id_bytes.clone())])?;
 
     if res.len() != 1 {
-        return Err(Error::not_found("Key", "Id", id_as_str));
+        return Err(Error::not_found("Key", "Id", id.0.clone()));
     }
 
     let key_handle = res[0];

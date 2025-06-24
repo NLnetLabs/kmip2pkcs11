@@ -3,7 +3,7 @@
 mod client_request_handler;
 mod config;
 mod kmip;
-mod pkcs11client;
+mod pkcs11;
 
 use std::sync::Arc;
 

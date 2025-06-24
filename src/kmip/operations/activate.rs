@@ -1,10 +1,13 @@
 use kmip::types::{
     request::{BatchItem, RequestPayload},
-    response::{BatchItem as ResBatchItem, ResponsePayload, ResultReason, ResultStatus},
+    response::{
+        ActivateResponsePayload, BatchItem as ResBatchItem, ResponsePayload, ResultReason,
+        ResultStatus,
+    },
 };
 
-use crate::{config::Cfg, pkcs11client};
-use kmip::types::response::ActivateResponsePayload;
+use crate::config::Cfg;
+use crate::pkcs11::operations::get::get_public_key;
 
 pub fn op(
     cfg: &Cfg,
@@ -18,7 +21,7 @@ pub fn op(
     };
 
     // Make sure the key exists
-    match pkcs11client::get_public_key(cfg, id) {
+    match get_public_key(cfg, id) {
         Ok(Some(_)) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {

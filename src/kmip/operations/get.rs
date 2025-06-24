@@ -1,4 +1,5 @@
 use kmip::types::{
+    common::ObjectType,
     request::{BatchItem, RequestPayload},
     response::{
         BatchItem as ResBatchItem, GetResponsePayload, ManagedObject, PublicKey, ResponsePayload,
@@ -6,8 +7,8 @@ use kmip::types::{
     },
 };
 
-use crate::{config::Cfg, pkcs11client};
-use kmip::types::common::ObjectType;
+use crate::config::Cfg;
+use crate::pkcs11::operations::get::get_public_key;
 
 pub fn op(
     cfg: &Cfg,
@@ -20,7 +21,7 @@ pub fn op(
         ));
     };
 
-    match pkcs11client::get_public_key(cfg, id) {
+    match get_public_key(cfg, id) {
         Ok(Some(key_block)) => {
             let cryptographic_object = ManagedObject::PublicKey(PublicKey { key_block });
 

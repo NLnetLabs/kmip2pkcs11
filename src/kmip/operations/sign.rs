@@ -1,10 +1,12 @@
 use kmip::types::{
     request::{BatchItem, RequestPayload},
-    response::{BatchItem as ResBatchItem, ResponsePayload, ResultReason, ResultStatus},
+    response::{
+        BatchItem as ResBatchItem, ResponsePayload, ResultReason, ResultStatus, SignResponsePayload,
+    },
 };
 
-use crate::{config::Cfg, pkcs11client};
-use kmip::types::response::SignResponsePayload;
+use crate::config::Cfg;
+use crate::pkcs11::operations::sign::sign;
 
 pub fn op(
     cfg: &Cfg,
@@ -19,7 +21,7 @@ pub fn op(
         ));
     };
 
-    match pkcs11client::sign(cfg, id, cryptographic_parameters, data) {
+    match sign(cfg, id, cryptographic_parameters, data) {
         Ok(signature_data) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {

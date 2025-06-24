@@ -1,11 +1,11 @@
 [package]
-name = "kmip2pkcs11"
+name = "nameshed-hsm-relay"
 version = "0.1.0"
 edition = "2024"
-authors = ["Ximon Eighteen <ximon.eighteen@gmail.com>"]
-description = "KMIP to PKCS#11 proxy"
-repository = "https://github.com/NLnetLabs/kmip2pkcs11proxy/"
-keywords = ["KMIP", "PKCS#11"]
+authors = ["NLnet Labs <nameshed@nlnetlabs.nl>"]
+description = "KMIP to PKCS#11 HSM relay for the Nameshed project"
+repository = "https://github.com/NLnetLabs/nameshed-hsm-relay/"
+keywords = ["KMIP", "PKCS#11", "HSM", "Rust"]
 categories = ["cryptography"]
 readme = "README.md"
 

@@ -549,24 +549,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kmip2pkcs11"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "cryptoki",
- "hex",
- "kmip-protocol",
- "kmip-ttlv",
- "log",
- "rpki",
- "rustls 0.23.26",
- "tokio",
- "tokio-rustls 0.26.2",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -676,6 +658,24 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "nameshed-hsm-relay"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cryptoki",
+ "hex",
+ "kmip-protocol",
+ "kmip-ttlv",
+ "log",
+ "rpki",
+ "rustls 0.23.26",
+ "tokio",
+ "tokio-rustls 0.26.2",
+ "tracing-subscriber",
 ]
 
 [[package]]

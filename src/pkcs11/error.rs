@@ -35,6 +35,9 @@ pub enum Error {
 
     /// PKCS#11 data was encountered of a type that we do not support.
     UnsupportedObjectClass(ObjectClass),
+
+    /// All randomly generated CKA_ID values already existed.
+    NoFreeKeyIdAvailable,
 }
 
 impl Error {
@@ -110,6 +113,10 @@ impl Display for Error {
             Error::UnsupportedObjectClass(object_class) => write!(
                 f,
                 "Relay lacks support for PKCS#11 object class '{object_class}'"
+            ),
+            Error::NoFreeKeyIdAvailable => write!(
+                f,
+                "Failed to generate a CKA_ID value that isn't already taken by an existing key"
             ),
         }
     }

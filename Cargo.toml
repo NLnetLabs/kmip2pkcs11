@@ -27,3 +27,4 @@ rpki = { version = "0.18", features = ["crypto"] }
 tokio = { version = "1.44.2", features = ["macros", "net", "rt-multi-thread"] }
 rustls = "0.23.26"
 tokio-rustls = "0.26.2"
+rand = "0.9.1"

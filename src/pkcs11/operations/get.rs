@@ -7,22 +7,47 @@ use kmip::types::common::{
     CryptographicAlgorithm, KeyFormatType, KeyMaterial, TransparentRSAPublicKey, UniqueIdentifier,
 };
 use kmip::types::response::{KeyBlock, KeyValue};
-use log::{debug, info};
+use log::debug;
 
 use crate::config::Cfg;
 use crate::pkcs11::error::Error;
-use crate::pkcs11::util::init_pkcs11;
+use crate::pkcs11::util::{init_pkcs11, kmip_unique_identifier_to_pkcs11_cka_id};
 
 pub fn get_public_key(cfg: &Cfg, id: &UniqueIdentifier) -> Result<Option<KeyBlock>, Error> {
     let session = init_pkcs11(cfg)?;
-    let id_bytes = hex::decode(&id.0).unwrap();
-    let id_as_str = String::from_utf8_lossy(&id_bytes);
-    info!("Get key: ID: {} [{}]", id.0, id_as_str);
+    let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, false);
 
     // Don't use session.find_objects() as it will request up to 10 results, and the actual
     // underlying C_FindObjects() call is not exposed via the Cryptoki crate.
-    let mut iter = session
-        .iter_objects_with_cache_size(&[Attribute::Id(id_bytes.clone())], NonZeroUsize::MIN)?;
+    let mut iter = session.iter_objects_with_cache_size(
+        &[
+            Attribute::Id(cka_id),
+            Attribute::Class(ObjectClass::PUBLIC_KEY),
+        ],
+        NonZeroUsize::MIN,
+    )?;
+
+    if let Some(Ok(key_handle)) = iter.next() {
+        debug!("Getting attributes for key {key_handle:?}...");
+        Ok(Some(get_key_details(&session, key_handle)?))
+    } else {
+        Ok(None)
+    }
+}
+
+pub fn get_private_key(cfg: &Cfg, id: &UniqueIdentifier) -> Result<Option<KeyBlock>, Error> {
+    let session = init_pkcs11(cfg)?;
+    let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, true);
+
+    // Don't use session.find_objects() as it will request up to 10 results, and the actual
+    // underlying C_FindObjects() call is not exposed via the Cryptoki crate.
+    let mut iter = session.iter_objects_with_cache_size(
+        &[
+            Attribute::Id(cka_id),
+            Attribute::Class(ObjectClass::PRIVATE_KEY),
+        ],
+        NonZeroUsize::MIN,
+    )?;
 
     if let Some(Ok(key_handle)) = iter.next() {
         debug!("Getting attributes for key {key_handle:?}...");

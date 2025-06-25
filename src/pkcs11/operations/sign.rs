@@ -1,5 +1,5 @@
 use cryptoki::mechanism::{Mechanism, MechanismType};
-use cryptoki::object::{Attribute, AttributeType};
+use cryptoki::object::{Attribute, AttributeType, ObjectClass};
 use kmip::types::common::{
     CryptographicAlgorithm, CryptographicParameters, Data, UniqueIdentifier,
 };
@@ -7,7 +7,7 @@ use log::debug;
 
 use crate::config::Cfg;
 use crate::pkcs11::error::Error;
-use crate::pkcs11::util::init_pkcs11;
+use crate::pkcs11::util::{init_pkcs11, kmip_unique_identifier_to_pkcs11_cka_id};
 
 pub fn sign(
     cfg: &Cfg,
@@ -18,11 +18,20 @@ pub fn sign(
     let session = init_pkcs11(cfg)?;
     let mechanism;
 
-    let id_bytes = hex::decode(&id.0).unwrap();
-    let id_as_str = String::from_utf8_lossy(&id_bytes);
-    println!("Get key: ID: {} [{}]", id.0, id_as_str);
-    let res = session.find_objects(&[Attribute::Id(id_bytes.clone())])?;
+    // Only private keys can be used for signing.
+    let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, true);
+    let res = session.find_objects(&[
+        Attribute::Id(cka_id),
+        Attribute::Class(ObjectClass::PRIVATE_KEY),
+    ])?;
 
+    // Warning: CKA_ID is not unique. Firstly, by default it is empty.
+    // Secondly, "the key identifier for a public key and its corresponding
+    // private key should be the same.". Thirdly, "In the case of public and
+    // private keys, this field assists in handling multiple keys held by the
+    // same subject" and "Since the keys are distinguished by subject name as
+    // well as identifier, it is possible that keys for different subjects may
+    // have the same CKA_ID value without introducing any ambiguity."
     if res.len() != 1 {
         return Err(Error::not_found("Key", "Id", id.0.clone()));
     }

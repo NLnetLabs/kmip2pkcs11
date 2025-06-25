@@ -1,12 +1,13 @@
-use std::time::SystemTime;
+use core::num::NonZeroUsize;
 
 use cryptoki::mechanism::Mechanism;
 use cryptoki::object::Attribute;
 use kmip::types::common::UniqueIdentifier;
+use log::debug;
 
 use crate::config::Cfg;
 use crate::pkcs11::error::Error;
-use crate::pkcs11::util::init_pkcs11;
+use crate::pkcs11::util::{generate_cka_id, init_pkcs11, pkcs11_cka_id_to_kmip_unique_identifier};
 
 pub struct CreatedKeyPair {
     pub public_key_id: UniqueIdentifier,
@@ -104,17 +105,26 @@ pub fn create_key_pair(
     //
     // - What do PowerDNS, Knot, etc do?
 
-    let epoch_time_now = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+    let session = init_pkcs11(cfg)?;
 
-    let base_name = format!("nameshed_{epoch_time_now}");
-    let pub_id = format!("{base_name}_pub").as_bytes().to_vec();
-    let priv_id = format!("{base_name}_priv").as_bytes().to_vec();
+    let mut num_retries = 3;
+    let id = loop {
+        let id = generate_cka_id();
+        let num_found = session
+            .iter_objects_with_cache_size(&[Attribute::Id(id.to_vec())], NonZeroUsize::MIN)?
+            .count();
+        match num_found {
+            0 => break id,
+            _ if num_retries == 0 => {
+                debug!("Generated CKA_ID value already taken, retrying");
+                return Err(Error::NoFreeKeyIdAvailable);
+            }
+            _ => num_retries -= 1,
+        }
+    };
 
     let mut pub_key_template = vec![
-        Attribute::Id(pub_id.clone()),
+        Attribute::Id(id.to_vec()),
         Attribute::Verify(true),
         Attribute::Encrypt(false),
         Attribute::Wrap(false),
@@ -123,7 +133,7 @@ pub fn create_key_pair(
     pub_key_template.append(&mut pub_attrs);
 
     let mut priv_key_template = vec![
-        Attribute::Id(priv_id.clone()),
+        Attribute::Id(id.to_vec()),
         Attribute::Sign(true),
         Attribute::Decrypt(false),
         Attribute::Unwrap(false),
@@ -132,9 +142,6 @@ pub fn create_key_pair(
         Attribute::Sensitive(true),
     ];
     priv_key_template.append(&mut priv_attrs);
-
-    eprintln!("Public key ID: {pub_id:?}");
-    eprintln!("Private key ID: {priv_id:?}");
 
     // TODO: The error returned is a bit useless when Display'd, e.g.:
     //
@@ -155,11 +162,13 @@ pub fn create_key_pair(
     // size of 1048 is apparently not permitted by the YubiHSM, with 2048 the
     // error goes away. That is completely not obvious from this error
     // message.
-    let session = init_pkcs11(cfg)?;
     session.generate_key_pair(&mechanism, &pub_key_template, &priv_key_template)?;
 
+    let public_key_id = pkcs11_cka_id_to_kmip_unique_identifier(&id, false);
+    let private_key_id = pkcs11_cka_id_to_kmip_unique_identifier(&id, true);
+
     Ok(CreatedKeyPair {
-        public_key_id: UniqueIdentifier(hex::encode_upper(pub_id)),
-        private_key_id: UniqueIdentifier(hex::encode_upper(priv_id)),
+        public_key_id,
+        private_key_id,
     })
 }

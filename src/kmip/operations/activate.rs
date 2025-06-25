@@ -6,8 +6,7 @@ use kmip::types::{
     },
 };
 
-use crate::config::Cfg;
-use crate::pkcs11::operations::get::get_public_key;
+use crate::{config::Cfg, pkcs11::operations::get::get_private_key};
 
 pub fn op(
     cfg: &Cfg,
@@ -21,7 +20,7 @@ pub fn op(
     };
 
     // Make sure the key exists
-    match get_public_key(cfg, id) {
+    match get_private_key(cfg, id) {
         Ok(Some(_)) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {

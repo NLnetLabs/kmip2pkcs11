@@ -38,6 +38,10 @@ pub fn op(
             })
         }
 
+        Err(err) if matches!(err, crate::pkcs11::error::Error::DataNotFound { .. }) => {
+            Err((ResultReason::ItemNotFound, err.to_string()))
+        }
+
         Err(err) => Err((ResultReason::GeneralFailure, err.to_string())),
     }
 }

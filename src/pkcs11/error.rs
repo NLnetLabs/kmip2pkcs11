@@ -93,7 +93,7 @@ impl Display for Error {
                 id_value,
             } => write!(
                 f,
-                "Relay could not find data of type {data_type} with id {id_type} {id_value} could be found"
+                "Relay could not find data of type '{data_type}' with id '{id_value}' (type '{id_type}')"
             ),
             Error::UnsupportedAttribute(attribute) => write!(
                 f,

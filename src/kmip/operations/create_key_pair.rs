@@ -10,10 +10,10 @@ use kmip::types::{
 use cryptoki::mechanism::Mechanism;
 use cryptoki::object::{Attribute, KeyType};
 
-use crate::config::Cfg;
 use crate::pkcs11::operations::create_key_pair::{CreatedKeyPair, create_key_pair};
+use crate::pkcs11::pool::Pkcs11Connection;
 
-pub fn op(cfg: &Cfg, batch_item: &BatchItem) -> Result<ResBatchItem, (ResultReason, String)> {
+pub fn op(pkcs11conn: Pkcs11Connection, batch_item: &BatchItem) -> Result<ResBatchItem, (ResultReason, String)> {
     let RequestPayload::CreateKeyPair(common_attrs, priv_key_attrs, pub_key_attrs) =
         batch_item.request_payload()
     else {
@@ -144,7 +144,7 @@ pub fn op(cfg: &Cfg, batch_item: &BatchItem) -> Result<ResBatchItem, (ResultReas
     let CreatedKeyPair {
         public_key_id,
         private_key_id,
-    } = create_key_pair(cfg, pub_attrs, priv_attrs, mechanism).map_err(|err| {
+    } = create_key_pair(pkcs11conn, pub_attrs, priv_attrs, mechanism).map_err(|err| {
         (
             ResultReason::CryptographicFailure,
             format!("Failed to create key pair: {err}"),

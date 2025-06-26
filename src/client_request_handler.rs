@@ -2,24 +2,28 @@ use core::net::SocketAddr;
 
 use std::io::ErrorKind;
 
+use cryptoki::object::ObjectHandle;
 use kmip::Config;
 use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::ResultReason;
 use kmip_ttlv::PrettyPrinter;
 use log::{debug, error, info, log_enabled, warn};
+use moka::sync::Cache;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
 
-use crate::config::Cfg;
 use crate::kmip::operations::{activate, create_key_pair, get, sign, unknown};
 use crate::kmip::util::{mk_err_batch_item, mk_kmip_hex_dump, mk_response};
+use crate::pkcs11::pool::Pkcs11Pool;
+
+pub type HandleCache = Cache<String, ObjectHandle>;
 
 pub async fn handle_client_requests(
     mut stream: TlsStream<TcpStream>,
     peer_addr: SocketAddr,
-    cfg: Cfg,
+    pkcs11pool: Pkcs11Pool,
 ) -> anyhow::Result<()> {
     let reader_config = Config::new();
     let tag_map = kmip::tag_map::make_kmip_tag_map();
@@ -72,13 +76,14 @@ pub async fn handle_client_requests(
                         batch_item.operation()
                     );
 
+                    let pkcs11conn = pkcs11pool.get()?;
+
                     let res = match batch_item.operation() {
-                        Operation::Activate => activate::op(&cfg, batch_item),
-                        Operation::CreateKeyPair => create_key_pair::op(&cfg, batch_item),
-                        Operation::Get => get::op(&cfg, batch_item),
-                        // Operation::Locate => locate::op(&cfg, batch_item),
-                        Operation::Sign => sign::op(&cfg, batch_item),
-                        _ => unknown::op(&cfg, batch_item),
+                        Operation::Activate => activate::op(pkcs11conn, batch_item),
+                        Operation::CreateKeyPair => create_key_pair::op(pkcs11conn, batch_item),
+                        Operation::Get => get::op(pkcs11conn, batch_item),
+                        Operation::Sign => sign::op(pkcs11conn, batch_item),
+                        _ => unknown::op(batch_item),
                     };
 
                     let res_batch_item = match res {

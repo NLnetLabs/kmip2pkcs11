@@ -1,63 +1,47 @@
-use core::num::NonZeroUsize;
-
 use cryptoki::mechanism::MechanismType;
 use cryptoki::object::{Attribute, AttributeType, KeyType, ObjectClass, ObjectHandle};
-use cryptoki::session::Session;
 use kmip::types::common::{
     CryptographicAlgorithm, KeyFormatType, KeyMaterial, TransparentRSAPublicKey, UniqueIdentifier,
 };
 use kmip::types::response::{KeyBlock, KeyValue};
-use log::debug;
+use log::info;
 
-use crate::config::Cfg;
 use crate::pkcs11::error::Error;
-use crate::pkcs11::util::{init_pkcs11, kmip_unique_identifier_to_pkcs11_cka_id};
+use crate::pkcs11::pool::Pkcs11Connection;
+use crate::pkcs11::util::get_cached_handle_for_key;
 
-pub fn get_public_key(cfg: &Cfg, id: &UniqueIdentifier) -> Result<Option<KeyBlock>, Error> {
-    let session = init_pkcs11(cfg)?;
-    let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, false);
+pub fn get_public_key(
+    pkcs11conn: Pkcs11Connection,
+    id: &UniqueIdentifier,
+) -> Result<Option<KeyBlock>, Error> {
+    let key_handle = get_cached_handle_for_key(&pkcs11conn, id, false);
 
-    // Don't use session.find_objects() as it will request up to 10 results, and the actual
-    // underlying C_FindObjects() call is not exposed via the Cryptoki crate.
-    let mut iter = session.iter_objects_with_cache_size(
-        &[
-            Attribute::Id(cka_id),
-            Attribute::Class(ObjectClass::PUBLIC_KEY),
-        ],
-        NonZeroUsize::MIN,
-    )?;
-
-    if let Some(Ok(key_handle)) = iter.next() {
-        debug!("Getting attributes for key {key_handle:?}...");
-        Ok(Some(get_key_details(&session, key_handle)?))
+    if let Some(key_handle) = key_handle {
+        info!("Getting attributes for public key handle {key_handle} (KMIP id {})...", id.0);
+        Ok(Some(get_key_details(&pkcs11conn, key_handle)?))
     } else {
         Ok(None)
     }
 }
 
-pub fn get_private_key(cfg: &Cfg, id: &UniqueIdentifier) -> Result<Option<KeyBlock>, Error> {
-    let session = init_pkcs11(cfg)?;
-    let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, true);
+pub fn get_private_key(
+    pkcs11conn: Pkcs11Connection,
+    id: &UniqueIdentifier,
+) -> Result<Option<KeyBlock>, Error> {
+    let key_handle = get_cached_handle_for_key(&pkcs11conn, id, true);
 
-    // Don't use session.find_objects() as it will request up to 10 results, and the actual
-    // underlying C_FindObjects() call is not exposed via the Cryptoki crate.
-    let mut iter = session.iter_objects_with_cache_size(
-        &[
-            Attribute::Id(cka_id),
-            Attribute::Class(ObjectClass::PRIVATE_KEY),
-        ],
-        NonZeroUsize::MIN,
-    )?;
-
-    if let Some(Ok(key_handle)) = iter.next() {
-        debug!("Getting attributes for key {key_handle:?}...");
-        Ok(Some(get_key_details(&session, key_handle)?))
+    if let Some(key_handle) = key_handle {
+        info!("Getting attributes for private key handle {key_handle} (KMIP id {})...", id.0);
+        Ok(Some(get_key_details(&pkcs11conn, key_handle)?))
     } else {
         Ok(None)
     }
 }
 
-fn get_key_details(session: &Session, key_handle: ObjectHandle) -> Result<KeyBlock, Error> {
+fn get_key_details(
+    pkcs11conn: &Pkcs11Connection,
+    key_handle: ObjectHandle,
+) -> Result<KeyBlock, Error> {
     let mut cryptographic_algorithm: Option<CryptographicAlgorithm> = None;
     let mut cryptographic_length: Option<i32> = None;
     let mut modulus: Option<Vec<u8>> = None;
@@ -75,7 +59,9 @@ fn get_key_details(session: &Session, key_handle: ObjectHandle) -> Result<KeyBlo
         AttributeType::KeyGenMechanism,
     ];
 
-    let attrs = session.get_attributes(key_handle, &request_attrs)?;
+    let attrs = pkcs11conn
+        .session()
+        .get_attributes(key_handle, &request_attrs)?;
 
     if attrs.is_empty() {
         return Err(Error::not_found("Key", "ObjectHandle", key_handle));

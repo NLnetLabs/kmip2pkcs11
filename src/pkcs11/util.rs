@@ -1,22 +1,41 @@
-use cryptoki::context::{CInitializeArgs, Pkcs11};
-use cryptoki::session::{Session, UserType};
+use std::result::Result;
+
+use cryptoki::context::{CInitializeArgs, Function, Pkcs11};
+use cryptoki::object::{Attribute, ObjectClass, ObjectHandle};
 use cryptoki::slot::Slot;
 use kmip::types::common::UniqueIdentifier;
+use log::info;
 use rand::RngCore;
 
 use crate::config::Cfg;
 use crate::pkcs11::error::Error;
+use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
 
-pub fn init_pkcs11(cfg: &Cfg) -> Result<Session, Error> {
+pub fn init_pkcs11(cfg: &mut Cfg) -> Result<Pkcs11Pool, Error> {
     let pkcs11 = Pkcs11::new(&cfg.lib_path)?;
     pkcs11.initialize(CInitializeArgs::OsThreads)?;
-    let slot = get_slot(&pkcs11, cfg)?;
-    let session = pkcs11.open_rw_session(slot)?;
-    session.login(UserType::User, cfg.user_pin.as_ref())?;
-    Ok(session)
+    for f in [
+        Function::FindObjects,
+        Function::GenerateKeyPair,
+        Function::GetAttributeValue,
+        Function::GetSlotInfo,
+        Function::GetSlotInfo,
+        Function::GetTokenInfo,
+        Function::Login,
+        Function::Sign,
+    ] {
+        if !pkcs11.is_fn_supported(f) {
+            return Err(Error::UnusableConfig(
+                "Configured PKCS#11 library lacks support for {f}".to_string(),
+            ));
+        }
+    }
+    let slot = get_slot(&pkcs11, &cfg)?;
+    let pool = Pkcs11Pool::new(pkcs11, slot, cfg.user_pin.take())?;
+    Ok(pool)
 }
 
-pub fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> std::result::Result<Slot, Error> {
+pub fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> Result<Slot, Error> {
     fn has_token_label(pkcs11: &Pkcs11, slot: Slot, slot_label: &str) -> bool {
         pkcs11
             .get_token_info(slot)
@@ -117,6 +136,35 @@ pub fn kmip_unique_identifier_to_pkcs11_cka_id(id: &UniqueIdentifier, private: b
     let mut cka_id = Vec::with_capacity(id_len / 2);
     cka_id.append(&mut hex::decode(&id.0[..id_len]).unwrap());
     cka_id
+}
+
+pub fn get_cached_handle_for_key(
+    pkcs11conn: &Pkcs11Connection,
+    id: &UniqueIdentifier,
+    private: bool,
+) -> Option<ObjectHandle> {
+    pkcs11conn
+        .handle_cache()
+        .optionally_get_with_by_ref(&id.0, || {
+            let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, private);
+            let object_class = match private {
+                true => ObjectClass::PRIVATE_KEY,
+                false => ObjectClass::PUBLIC_KEY,
+            };
+            info!("Finding objects for key... {}", hex::encode(&cka_id));
+            if let Ok(res) = pkcs11conn
+                .session()
+                .find_objects(&[Attribute::Id(cka_id), Attribute::Class(object_class)])
+            {
+                if res.len() == 1 {
+                    info!("Found");
+                    return Some(res[0]);
+                }
+            }
+
+            info!("Missing");
+            None
+        })
 }
 
 #[cfg(test)]

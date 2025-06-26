@@ -1,5 +1,3 @@
-// TODO: Ensure clients can distinguish a problem with the relay vs a problem
-// with the underlying PKCS#11 token.
 mod client_request_handler;
 mod config;
 mod kmip;
@@ -19,6 +17,9 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 use crate::client_request_handler::handle_client_requests;
+use crate::pkcs11::error::Error;
+use crate::pkcs11::pool::Pkcs11Pool;
+use crate::pkcs11::util::init_pkcs11;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,7 +31,15 @@ async fn main() -> Result<()> {
         .try_init()
         .ok();
 
-    let cfg = Cfg::parse();
+    let mut cfg = Cfg::parse();
+
+    // Create PKCS#11 connection pool.
+    info!(
+        "Loading and initializing PKCS#11 library {}",
+        cfg.lib_path.display()
+    );
+    let pkcs11pool = init_pkcs11(&mut cfg)?;
+    announce_pkcs11_info(&pkcs11pool, &cfg)?;
 
     let certs =
         CertificateDer::pem_file_iter(&cfg.server_cert_path)?.collect::<Result<Vec<_>, _>>()?;
@@ -46,18 +55,24 @@ async fn main() -> Result<()> {
     loop {
         let (stream, peer_addr) = listener.accept().await?;
         let acceptor = acceptor.clone();
-        let cfg = cfg.clone();
+        let pkcs11pool = pkcs11pool.clone();
 
         info!("Waiting for connections...");
         tokio::spawn(async move {
             match acceptor.accept(stream).await {
                 Ok(stream) => {
                     info!("Accepting connection from {peer_addr}");
-                    if let Err(err) = handle_client_requests(stream, peer_addr, cfg).await {
-                        error!("Connection with {peer_addr} terminated abnormally: {err}");
-                    } else {
-                        info!("Connection with {peer_addr} terminated");
-                    }
+                    let pkcs11pool = pkcs11pool.clone();
+
+                    tokio::spawn(async move {
+                        if let Err(err) =
+                            handle_client_requests(stream, peer_addr, pkcs11pool).await
+                        {
+                            error!("Connection with {peer_addr} terminated abnormally: {err}");
+                        } else {
+                            info!("Connection with {peer_addr} terminated");
+                        }
+                    });
                 }
                 Err(err) => {
                     error!("Error accepting connection: {err}");
@@ -65,4 +80,19 @@ async fn main() -> Result<()> {
             }
         });
     }
+}
+
+fn announce_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Cfg) -> Result<(), Error> {
+    let pkcs11 = pkcs11pool.pkcs11();
+    let slot = pkcs11pool.slot();
+    let token_info = pkcs11.get_token_info(slot)?;
+    let slot_info = pkcs11.get_slot_info(slot)?;
+    let lib_name = cfg.lib_path.file_name().unwrap();
+    info!(
+        "Using PKCS#11 token with label {} in slot {} via library {}",
+        token_info.label(),
+        slot_info.slot_description(),
+        lib_name.display()
+    );
+    Ok(())
 }

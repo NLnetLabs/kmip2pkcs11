@@ -6,10 +6,11 @@ use kmip::types::{
     },
 };
 
-use crate::{config::Cfg, pkcs11::operations::get::get_private_key};
+use crate::pkcs11::operations::get::get_private_key;
+use crate::pkcs11::pool::Pkcs11Connection;
 
 pub fn op(
-    cfg: &Cfg,
+    pkcs11conn: Pkcs11Connection,
     batch_item: &BatchItem,
 ) -> Result<ResBatchItem, (ResultReason, std::string::String)> {
     let RequestPayload::Activate(Some(id)) = batch_item.request_payload() else {
@@ -20,7 +21,7 @@ pub fn op(
     };
 
     // Make sure the key exists
-    match get_private_key(cfg, id) {
+    match get_private_key(pkcs11conn, id) {
         Ok(Some(_)) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {

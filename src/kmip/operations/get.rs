@@ -7,11 +7,11 @@ use kmip::types::{
     },
 };
 
-use crate::config::Cfg;
 use crate::pkcs11::operations::get::get_public_key;
+use crate::pkcs11::pool::Pkcs11Connection;
 
 pub fn op(
-    cfg: &Cfg,
+    pkcs11conn: Pkcs11Connection,
     batch_item: &BatchItem,
 ) -> Result<ResBatchItem, (ResultReason, std::string::String)> {
     let RequestPayload::Get(Some(id), _, _, _) = batch_item.request_payload() else {
@@ -21,7 +21,7 @@ pub fn op(
         ));
     };
 
-    match get_public_key(cfg, id) {
+    match get_public_key(pkcs11conn, id) {
         Ok(Some(key_block)) => {
             let cryptographic_object = ManagedObject::PublicKey(PublicKey { key_block });
 

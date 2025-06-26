@@ -1,13 +1,11 @@
-use core::num::NonZeroUsize;
-
 use cryptoki::mechanism::Mechanism;
 use cryptoki::object::Attribute;
 use kmip::types::common::UniqueIdentifier;
 use log::debug;
 
-use crate::config::Cfg;
 use crate::pkcs11::error::Error;
-use crate::pkcs11::util::{generate_cka_id, init_pkcs11, pkcs11_cka_id_to_kmip_unique_identifier};
+use crate::pkcs11::pool::Pkcs11Connection;
+use crate::pkcs11::util::{generate_cka_id, pkcs11_cka_id_to_kmip_unique_identifier};
 
 pub struct CreatedKeyPair {
     pub public_key_id: UniqueIdentifier,
@@ -15,7 +13,7 @@ pub struct CreatedKeyPair {
 }
 
 pub fn create_key_pair(
-    cfg: &Cfg,
+    pkcs11conn: Pkcs11Connection,
     mut pub_attrs: Vec<Attribute>,
     mut priv_attrs: Vec<Attribute>,
     mechanism: Mechanism,
@@ -105,14 +103,13 @@ pub fn create_key_pair(
     //
     // - What do PowerDNS, Knot, etc do?
 
-    let session = init_pkcs11(cfg)?;
-
     let mut num_retries = 3;
     let id = loop {
         let id = generate_cka_id();
-        let num_found = session
-            .iter_objects_with_cache_size(&[Attribute::Id(id.to_vec())], NonZeroUsize::MIN)?
-            .count();
+        let num_found = pkcs11conn
+            .session()
+            .find_objects(&[Attribute::Id(id.to_vec())])?
+            .len();
         match num_found {
             0 => break id,
             _ if num_retries == 0 => {
@@ -162,7 +159,9 @@ pub fn create_key_pair(
     // size of 1048 is apparently not permitted by the YubiHSM, with 2048 the
     // error goes away. That is completely not obvious from this error
     // message.
-    session.generate_key_pair(&mechanism, &pub_key_template, &priv_key_template)?;
+    pkcs11conn
+        .session()
+        .generate_key_pair(&mechanism, &pub_key_template, &priv_key_template)?;
 
     let public_key_id = pkcs11_cka_id_to_kmip_unique_identifier(&id, false);
     let private_key_id = pkcs11_cka_id_to_kmip_unique_identifier(&id, true);

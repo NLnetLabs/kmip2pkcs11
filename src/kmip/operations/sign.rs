@@ -5,11 +5,11 @@ use kmip::types::{
     },
 };
 
-use crate::config::Cfg;
 use crate::pkcs11::operations::sign::sign;
+use crate::pkcs11::pool::Pkcs11Connection;
 
 pub fn op(
-    cfg: &Cfg,
+    pkcs11conn: Pkcs11Connection,
     batch_item: &BatchItem,
 ) -> Result<ResBatchItem, (ResultReason, std::string::String)> {
     let RequestPayload::Sign(Some(id), cryptographic_parameters, data) =
@@ -21,7 +21,7 @@ pub fn op(
         ));
     };
 
-    match sign(cfg, id, cryptographic_parameters, data) {
+    match sign(pkcs11conn, id, cryptographic_parameters, data) {
         Ok(signature_data) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {

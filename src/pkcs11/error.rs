@@ -1,12 +1,14 @@
 use core::fmt::Display;
 
+use cryptoki::error::RvError;
 use cryptoki::mechanism::MechanismType;
 use cryptoki::object::{Attribute, KeyType, ObjectClass};
 
+#[derive(Debug)]
 pub enum Error {
     /// A problem occurred interacting with the PKCS#11 library or while
     /// communicating with the underlying cryptographic device.
-    DeviceFailure(cryptoki::error::Error),
+    HsmFailure(cryptoki::error::Error),
 
     /// An operation failed potentially due to incorrect user supplied
     /// configuration details.
@@ -74,21 +76,126 @@ impl Error {
 
 impl From<cryptoki::error::Error> for Error {
     fn from(err: cryptoki::error::Error) -> Self {
-        Self::DeviceFailure(err)
+        Self::HsmFailure(err)
+    }
+}
+
+impl From<r2d2::Error> for Error {
+    fn from(err: r2d2::Error) -> Self {
+        Self::UnusableConfig(err.to_string())
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::DeviceFailure(cryptoki::error::Error::LibraryLoading(e)) => write!(
+            Error::HsmFailure(cryptoki::error::Error::LibraryLoading(e)) => write!(
                 f,
                 "Relay failed to load the configured PKCS#11 library: {e}"
             ),
-            Error::DeviceFailure(cryptoki::error::Error::Pkcs11(e, func)) => {
-                write!(f, "Relay failed to invoke PKCS#11 function '{func}': {e}")
+            Error::HsmFailure(cryptoki::error::Error::Pkcs11(rv_error, func)) => {
+                let rv_error_code = match rv_error {
+                    RvError::Cancel => "Cancel",
+                    RvError::HostMemory => "HostMemory",
+                    RvError::SlotIdInvalid => "SlotIdInvalid",
+                    RvError::GeneralError => "GeneralError",
+                    RvError::FunctionFailed => "FunctionFailed",
+                    RvError::ArgumentsBad => "ArgumentsBad",
+                    RvError::NoEvent => "NoEvent",
+                    RvError::NeedToCreateThreads => "NeedToCreateThreads",
+                    RvError::CantLock => "CantLock",
+                    RvError::AttributeReadOnly => "AttributeReadOnly",
+                    RvError::AttributeSensitive => "AttributeSensitive",
+                    RvError::AttributeTypeInvalid => "AttributeTypeInvalid",
+                    RvError::AttributeValueInvalid => "AttributeValueInvalid",
+                    RvError::ActionProhibited => "ActionProhibited",
+                    RvError::DataInvalid => "DataInvalid",
+                    RvError::DataLenRange => "DataLenRange",
+                    RvError::DeviceError => "DeviceError",
+                    RvError::DeviceMemory => "DeviceMemory",
+                    RvError::DeviceRemoved => "DeviceRemoved",
+                    RvError::EncryptedDataInvalid => "EncryptedDataInvalid",
+                    RvError::EncryptedDataLenRange => "EncryptedDataLenRange",
+                    RvError::FunctionCanceled => "FunctionCanceled",
+                    RvError::FunctionNotParallel => "FunctionNotParallel",
+                    RvError::FunctionNotSupported => "FunctionNotSupported",
+                    RvError::CurveNotSupported => "CurveNotSupported",
+                    RvError::KeyHandleInvalid => "KeyHandleInvalid",
+                    RvError::KeySizeRange => "KeySizeRange",
+                    RvError::KeyTypeInconsistent => "KeyTypeInconsistent",
+                    RvError::KeyNotNeeded => "KeyNotNeeded",
+                    RvError::KeyChanged => "KeyChanged",
+                    RvError::KeyNeeded => "KeyNeeded",
+                    RvError::KeyIndigestible => "KeyIndigestible",
+                    RvError::KeyFunctionNotPermitted => "KeyFunctionNotPermitted",
+                    RvError::KeyNotWrappable => "KeyNotWrappable",
+                    RvError::KeyUnextractable => "KeyUnextractable",
+                    RvError::MechanismInvalid => "MechanismInvalid",
+                    RvError::MechanismParamInvalid => "MechanismParamInvalid",
+                    RvError::ObjectHandleInvalid => "ObjectHandleInvalid",
+                    RvError::OperationActive => "OperationActive",
+                    RvError::OperationNotInitialized => "OperationNotInitialized",
+                    RvError::PinIncorrect => "PinIncorrect",
+                    RvError::PinInvalid => "PinInvalid",
+                    RvError::PinLenRange => "PinLenRange",
+                    RvError::PinExpired => "PinExpired",
+                    RvError::PinLocked => "PinLocked",
+                    RvError::SessionClosed => "SessionClosed",
+                    RvError::SessionCount => "SessionCount",
+                    RvError::SessionHandleInvalid => "SessionHandleInvalid",
+                    RvError::SessionParallelNotSupported => "SessionParallelNotSupported",
+                    RvError::SessionReadOnly => "SessionReadOnly",
+                    RvError::SessionExists => "SessionExists",
+                    RvError::SessionReadOnlyExists => "SessionReadOnlyExists",
+                    RvError::SessionReadWriteSoExists => "SessionReadWriteSoExists",
+                    RvError::SignatureInvalid => "SignatureInvalid",
+                    RvError::SignatureLenRange => "SignatureLenRange",
+                    RvError::TemplateIncomplete => "TemplateIncomplete",
+                    RvError::TemplateInconsistent => "TemplateInconsistent",
+                    RvError::TokenNotPresent => "TokenNotPresent",
+                    RvError::TokenNotRecognized => "TokenNotRecognized",
+                    RvError::TokenWriteProtected => "TokenWriteProtected",
+                    RvError::UnwrappingKeyHandleInvalid => "UnwrappingKeyHandleInvalid",
+                    RvError::UnwrappingKeySizeRange => "UnwrappingKeySizeRange",
+                    RvError::UnwrappingKeyTypeInconsistent => "UnwrappingKeyTypeInconsistent",
+                    RvError::UserAlreadyLoggedIn => "UserAlreadyLoggedIn",
+                    RvError::UserNotLoggedIn => "UserNotLoggedIn",
+                    RvError::UserPinNotInitialized => "UserPinNotInitialized",
+                    RvError::UserTypeInvalid => "UserTypeInvalid",
+                    RvError::UserAnotherAlreadyLoggedIn => "UserAnotherAlreadyLoggedIn",
+                    RvError::UserTooManyTypes => "UserTooManyTypes",
+                    RvError::WrappedKeyInvalid => "WrappedKeyInvalid",
+                    RvError::WrappedKeyLenRange => "WrappedKeyLenRange",
+                    RvError::WrappingKeyHandleInvalid => "WrappingKeyHandleInvalid",
+                    RvError::WrappingKeySizeRange => "WrappingKeySizeRange",
+                    RvError::WrappingKeyTypeInconsistent => "WrappingKeyTypeInconsistent",
+                    RvError::RandomSeedNotSupported => "RandomSeedNotSupported",
+                    RvError::RandomNoRng => "RandomNoRng",
+                    RvError::DomainParamsInvalid => "DomainParamsInvalid",
+                    RvError::BufferTooSmall => "BufferTooSmall",
+                    RvError::SavedStateInvalid => "SavedStateInvalid",
+                    RvError::InformationSensitive => "InformationSensitive",
+                    RvError::StateUnsaveable => "StateUnsaveable",
+                    RvError::CryptokiNotInitialized => "CryptokiNotInitialized",
+                    RvError::CryptokiAlreadyInitialized => "CryptokiAlreadyInitialized",
+                    RvError::MutexBad => "MutexBad",
+                    RvError::MutexNotLocked => "MutexNotLocked",
+                    RvError::NewPinMode => "NewPinMode",
+                    RvError::NextOtp => "NextOtp",
+                    RvError::ExceededMaxIterations => "ExceededMaxIterations",
+                    RvError::FipsSelfTestFailed => "FipsSelfTestFailed",
+                    RvError::LibraryLoadFailed => "LibraryLoadFailed",
+                    RvError::PinTooWeak => "PinTooWeak",
+                    RvError::PublicKeyInvalid => "PublicKeyInvalid",
+                    RvError::FunctionRejected => "FunctionRejected",
+                    RvError::VendorDefined => "VendorDefined",
+                };
+                write!(
+                    f,
+                    "Relay failed to invoke PKCS#11 function '{func}': {rv_error_code}"
+                )
             }
-            Error::DeviceFailure(e) => write!(f, "Relay PKCS#11 Rust abstraction layer error: {e}"),
+            Error::HsmFailure(e) => write!(f, "Relay PKCS#11 Rust abstraction layer error: {e}"),
             Error::UnusableConfig(e) => write!(f, "Relay settings may be incorrect: {e}"),
             Error::DataNotFound {
                 data_type,
@@ -121,3 +228,5 @@ impl Display for Error {
         }
     }
 }
+
+impl std::error::Error for Error {}

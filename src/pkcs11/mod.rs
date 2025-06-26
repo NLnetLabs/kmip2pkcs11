@@ -2,5 +2,5 @@
 // handle in memory.
 pub mod error;
 pub mod operations;
-pub mod util;
 pub mod pool;
+pub mod util;

@@ -5,9 +5,7 @@ use kmip::types::{
 
 use crate::kmip::util::mk_err_batch_item;
 
-pub fn op(
-    batch_item: &BatchItem,
-) -> std::result::Result<ResBatchItem, (ResultReason, String)> {
+pub fn op(batch_item: &BatchItem) -> std::result::Result<ResBatchItem, (ResultReason, String)> {
     Ok(mk_err_batch_item(
         ResultReason::OperationNotSupported,
         format!(

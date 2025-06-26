@@ -13,7 +13,10 @@ use cryptoki::object::{Attribute, KeyType};
 use crate::pkcs11::operations::create_key_pair::{CreatedKeyPair, create_key_pair};
 use crate::pkcs11::pool::Pkcs11Connection;
 
-pub fn op(pkcs11conn: Pkcs11Connection, batch_item: &BatchItem) -> Result<ResBatchItem, (ResultReason, String)> {
+pub fn op(
+    pkcs11conn: Pkcs11Connection,
+    batch_item: &BatchItem,
+) -> Result<ResBatchItem, (ResultReason, String)> {
     let RequestPayload::CreateKeyPair(common_attrs, priv_key_attrs, pub_key_attrs) =
         batch_item.request_payload()
     else {

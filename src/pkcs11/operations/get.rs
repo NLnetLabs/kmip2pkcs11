@@ -17,7 +17,10 @@ pub fn get_public_key(
     let key_handle = get_cached_handle_for_key(&pkcs11conn, id, false);
 
     if let Some(key_handle) = key_handle {
-        info!("Getting attributes for public key handle {key_handle} (KMIP id {})...", id.0);
+        info!(
+            "Getting attributes for public key handle {key_handle} (KMIP id {})...",
+            id.0
+        );
         Ok(Some(get_key_details(&pkcs11conn, key_handle)?))
     } else {
         Ok(None)
@@ -31,7 +34,10 @@ pub fn get_private_key(
     let key_handle = get_cached_handle_for_key(&pkcs11conn, id, true);
 
     if let Some(key_handle) = key_handle {
-        info!("Getting attributes for private key handle {key_handle} (KMIP id {})...", id.0);
+        info!(
+            "Getting attributes for private key handle {key_handle} (KMIP id {})...",
+            id.0
+        );
         Ok(Some(get_key_details(&pkcs11conn, key_handle)?))
     } else {
         Ok(None)

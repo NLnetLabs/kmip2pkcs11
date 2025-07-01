@@ -82,6 +82,18 @@ pub async fn handle_client_requests(
 
                     let pkcs11conn = pkcs11pool.get()?;
 
+                    // Note: we are NOT compliant with the KMIP 1.2 Baseline
+                    // Server profile [1] because we lack support for the
+                    // following KMIP operations:
+                    //   - Locate
+                    //   - Check
+                    //   - Get Attributes
+                    //   - Add Attribute
+                    //   - Modify Attribute
+                    //   - Delete Attribute
+                    //   - Revoke
+                    //   - Destroy (TODO: We will need to support this)
+                    // [1]: https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.html#_Toc409613184
                     let res = match batch_item.operation() {
                         Operation::Activate => activate::op(pkcs11conn, batch_item),
                         Operation::CreateKeyPair => create_key_pair::op(pkcs11conn, batch_item),

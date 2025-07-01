@@ -38,6 +38,9 @@ pub enum Error {
     /// PKCS#11 data was encountered of a type that we do not support.
     UnsupportedObjectClass(ObjectClass),
 
+    /// Required cryptographic parameters are missing.
+    UnsupportedCryptographicParameters(String),
+
     /// All randomly generated CKA_ID values already existed.
     NoFreeKeyIdAvailable,
 }
@@ -71,6 +74,10 @@ impl Error {
 
     pub fn unsupported_object_class(object_class: ObjectClass) -> Self {
         Self::UnsupportedObjectClass(object_class)
+    }
+
+    pub fn unsupported_cryptographic_parameters(err: impl ToString) -> Self {
+        Self::UnsupportedCryptographicParameters(err.to_string())
     }
 }
 
@@ -220,6 +227,10 @@ impl Display for Error {
             Error::UnsupportedObjectClass(object_class) => write!(
                 f,
                 "Relay lacks support for PKCS#11 object class '{object_class}'"
+            ),
+            Error::UnsupportedCryptographicParameters(err) => write!(
+                f,
+                "Relay lacks support for signing with the given cryptographic parameters: {err}"
             ),
             Error::NoFreeKeyIdAvailable => write!(
                 f,

@@ -11,7 +11,11 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1.0"
+clap = { version = "4.5", features = ["cargo", "derive"] }
 cryptoki = "^0.9"
+domain = { git = "https://github.com/NLnetLabs/domain.git", branch = "patches-for-nameshed-prototype", features = [
+    "unstable-crypto-sign",
+] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 hex = "0.4"
 kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", version = "0.4.0", default-features = false, features = [
@@ -22,7 +26,6 @@ kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", pa
     "tls-with-tokio-rustls",
 ] }
 log = "0.4"
-clap = { version = "4.5", features = ["derive"] }
 rpki = { version = "0.18", features = ["crypto"] }
 tokio = { version = "1.44.2", features = ["macros", "net", "rt-multi-thread"] }
 rustls = "0.23.26"
@@ -30,3 +33,8 @@ tokio-rustls = "0.26.2"
 rand = "0.9.1"
 r2d2 = "0.8.10"
 moka = { version = "0.12.10", features = ["sync"] }
+
+[features]
+default = ["domain/ring"]
+
+openssl = ["domain/openssl"]

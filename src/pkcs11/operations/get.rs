@@ -21,30 +21,13 @@ pub fn get_public_key(
             "Getting attributes for public key handle {key_handle} (KMIP id {})...",
             id.0
         );
-        Ok(Some(get_key_details(&pkcs11conn, key_handle)?))
+        Ok(Some(get_public_key_details(&pkcs11conn, key_handle)?))
     } else {
         Ok(None)
     }
 }
 
-pub fn get_private_key(
-    pkcs11conn: Pkcs11Connection,
-    id: &UniqueIdentifier,
-) -> Result<Option<KeyBlock>, Error> {
-    let key_handle = get_cached_handle_for_key(&pkcs11conn, id, true);
-
-    if let Some(key_handle) = key_handle {
-        info!(
-            "Getting attributes for private key handle {key_handle} (KMIP id {})...",
-            id.0
-        );
-        Ok(Some(get_key_details(&pkcs11conn, key_handle)?))
-    } else {
-        Ok(None)
-    }
-}
-
-fn get_key_details(
+fn get_public_key_details(
     pkcs11conn: &Pkcs11Connection,
     key_handle: ObjectHandle,
 ) -> Result<KeyBlock, Error> {

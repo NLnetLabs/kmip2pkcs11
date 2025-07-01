@@ -6,8 +6,8 @@ use kmip::types::{
     },
 };
 
-use crate::pkcs11::operations::get::get_private_key;
 use crate::pkcs11::pool::Pkcs11Connection;
+use crate::pkcs11::util::get_cached_handle_for_key;
 
 pub fn op(
     pkcs11conn: Pkcs11Connection,
@@ -21,8 +21,8 @@ pub fn op(
     };
 
     // Make sure the key exists
-    match get_private_key(pkcs11conn, id) {
-        Ok(Some(_)) => {
+    match get_cached_handle_for_key(&pkcs11conn, id, true) {
+        Some(_) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {
                 operation: Some(*batch_item.operation()),
@@ -37,7 +37,7 @@ pub fn op(
             })
         }
 
-        Ok(None) => Ok(ResBatchItem {
+        None => Ok(ResBatchItem {
             operation: Some(*batch_item.operation()),
             unique_batch_item_id: batch_item.unique_batch_item_id().cloned(),
             result_status: ResultStatus::OperationFailed,
@@ -46,7 +46,5 @@ pub fn op(
             payload: None,
             message_extension: None,
         }),
-
-        Err(err) => Err((ResultReason::GeneralFailure, err.to_string())),
     }
 }

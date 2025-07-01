@@ -2,18 +2,19 @@
 // RwUser type, as we don't need the other user types, and because we always
 // respect CK_TOKEN_INFO ulMaxSessionCount.
 
+use std::ops::Deref;
+use std::thread::available_parallelism;
+
 use cryptoki::context::{Function, Pkcs11};
 use cryptoki::error::RvError;
 use cryptoki::session::{Session, SessionState, UserType};
 use cryptoki::slot::{Limit, Slot};
 use cryptoki::types::AuthPin;
+use log::{debug, info};
 use r2d2::ManageConnection;
-use std::ops::Deref;
 
 use crate::client_request_handler::HandleCache;
 use crate::pkcs11::error::Error;
-use log::{info, trace};
-use std::thread::available_parallelism;
 
 pub type Pkcs11Connection = r2d2::PooledConnection<Pkcs11ConnectionManager>;
 
@@ -141,7 +142,7 @@ impl ManageConnection for Pkcs11ConnectionManager {
     fn connect(&self) -> Result<Self::Connection, Self::Error> {
         let session = self.pkcs11.open_rw_session(self.slot)?;
         if session.get_session_info()?.session_state() != SessionState::RwUser {
-           trace!("Login required");
+            debug!("Login required");
             session
                 .login(UserType::User, self.user_pin.as_ref())
                 .or_else(|err| {
@@ -153,18 +154,18 @@ impl ManageConnection for Pkcs11ConnectionManager {
                     }
                 })?;
         } else {
-            trace!("Login NOT required");
+            debug!("Login NOT required");
         }
         let handle_cache = HandleCache::new(100);
         Ok(PoolConnection::new(session, handle_cache))
     }
 
     fn is_valid(&self, conn: &mut PoolConnection) -> Result<(), Self::Error> {
-        trace!("Testing session validity");
+        debug!("Testing session validity");
         if conn.session().get_session_info()?.session_state() == SessionState::RwUser {
             Ok(())
         } else {
-            trace!("Session is no longer valid (not logged in as a R/W user");
+            debug!("Session is no longer valid (not logged in as a R/W user");
             Err(Self::Error::Pkcs11(
                 RvError::UserNotLoggedIn,
                 Function::GetSessionInfo,

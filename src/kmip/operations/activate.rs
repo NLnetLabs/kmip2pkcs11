@@ -20,6 +20,9 @@ pub fn op(
         ));
     };
 
+    // Activate is a NO-OP for PKCS#11, but let's make sure that the private
+    // key being activated at least exists.
+
     // Make sure the key exists
     match get_cached_handle_for_key(&pkcs11conn, id, true) {
         Some(_) => {

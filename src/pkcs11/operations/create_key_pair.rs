@@ -1,5 +1,5 @@
 use cryptoki::mechanism::Mechanism;
-use cryptoki::object::Attribute;
+use cryptoki::object::{Attribute, ObjectClass};
 use kmip::types::common::UniqueIdentifier;
 use log::debug;
 
@@ -121,6 +121,7 @@ pub fn create_key_pair(
     };
 
     let mut pub_key_template = vec![
+        Attribute::Class(ObjectClass::PUBLIC_KEY),
         Attribute::Id(id.to_vec()),
         Attribute::Verify(true),
         Attribute::Encrypt(false),
@@ -129,11 +130,12 @@ pub fn create_key_pair(
     ];
     pub_key_template.append(&mut pub_attrs);
 
+    // Note: Attribute::Unwrap(false) causes the YubiHSM to return Device Error.
     let mut priv_key_template = vec![
+        Attribute::Class(ObjectClass::PRIVATE_KEY),
         Attribute::Id(id.to_vec()),
         Attribute::Sign(true),
         Attribute::Decrypt(false),
-        Attribute::Unwrap(false),
         Attribute::Token(true),
         Attribute::Private(true),
         Attribute::Sensitive(true),
@@ -159,6 +161,7 @@ pub fn create_key_pair(
     // size of 1048 is apparently not permitted by the YubiHSM, with 2048 the
     // error goes away. That is completely not obvious from this error
     // message.
+
     pkcs11conn
         .session()
         .generate_key_pair(&mechanism, &pub_key_template, &priv_key_template)?;

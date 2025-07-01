@@ -4,7 +4,7 @@ use kmip::types::common::{
     CryptographicAlgorithm, KeyFormatType, KeyMaterial, TransparentRSAPublicKey, UniqueIdentifier,
 };
 use kmip::types::response::{KeyBlock, KeyValue};
-use log::info;
+use log::{info, trace};
 
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::Pkcs11Connection;
@@ -70,6 +70,7 @@ fn get_public_key_details(
     // https://datatracker.ietf.org/doc/html/rfc3110#section-2. The
     // application implementing RFC 3110, i.e. Nameshed, should do that, not
     // us.
+    trace!("Returned PKCS#11 attributes: {attrs:?}");
 
     for attr in attrs {
         match attr {
@@ -80,8 +81,12 @@ fn get_public_key_details(
             }
 
             Attribute::KeyType(key_type) => {
-                if !matches!(key_type, KeyType::RSA | KeyType::EC) {
-                    return Err(Error::unsupported_key_type(key_type));
+                match key_type {
+                    KeyType::RSA => cryptographic_algorithm = Some(CryptographicAlgorithm::RSA),
+                    KeyType::EC => cryptographic_algorithm = Some(CryptographicAlgorithm::ECDSA),
+                    _ => {
+                        return Err(Error::unsupported_key_type(key_type));
+                    }
                 }
             }
 

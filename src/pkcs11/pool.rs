@@ -12,7 +12,7 @@ use std::ops::Deref;
 
 use crate::client_request_handler::HandleCache;
 use crate::pkcs11::error::Error;
-use log::info;
+use log::{info, trace};
 use std::thread::available_parallelism;
 
 pub type Pkcs11Connection = r2d2::PooledConnection<Pkcs11ConnectionManager>;
@@ -52,6 +52,7 @@ impl Pkcs11Pool {
         let pool = r2d2::Builder::new()
             .max_size(max_pool_size)
             .min_idle(Some(min_pool_size))
+            .test_on_check_out(true)
             .build(manager)
             .map_err(|err| Error::UnusableConfig(err.to_string()))?;
 
@@ -139,23 +140,31 @@ impl ManageConnection for Pkcs11ConnectionManager {
 
     fn connect(&self) -> Result<Self::Connection, Self::Error> {
         let session = self.pkcs11.open_rw_session(self.slot)?;
-        session
-            .login(UserType::User, self.user_pin.as_ref())
-            .or_else(|err| {
-                if let Self::Error::Pkcs11(RvError::UserAlreadyLoggedIn, Function::Login) = err {
-                    Ok(())
-                } else {
-                    Err(err)
-                }
-            })?;
+        if session.get_session_info()?.session_state() != SessionState::RwUser {
+           trace!("Login required");
+            session
+                .login(UserType::User, self.user_pin.as_ref())
+                .or_else(|err| {
+                    if let Self::Error::Pkcs11(RvError::UserAlreadyLoggedIn, Function::Login) = err
+                    {
+                        Ok(())
+                    } else {
+                        Err(err)
+                    }
+                })?;
+        } else {
+            trace!("Login NOT required");
+        }
         let handle_cache = HandleCache::new(100);
         Ok(PoolConnection::new(session, handle_cache))
     }
 
     fn is_valid(&self, conn: &mut PoolConnection) -> Result<(), Self::Error> {
+        trace!("Testing session validity");
         if conn.session().get_session_info()?.session_state() == SessionState::RwUser {
             Ok(())
         } else {
+            trace!("Session is no longer valid (not logged in as a R/W user");
             Err(Self::Error::Pkcs11(
                 RvError::UserNotLoggedIn,
                 Function::GetSessionInfo,

@@ -68,6 +68,7 @@ pub fn op(
                         }
 
                         kmip::types::common::CryptographicAlgorithm::RSA => {
+                            // TODO: Document where [1, 0, 1] comes from.
                             pub_attrs.push(Attribute::PublicExponent(vec![1, 0, 1]));
                             pub_attrs.push(Attribute::KeyType(KeyType::RSA));
                             priv_attrs.push(Attribute::KeyType(KeyType::RSA));

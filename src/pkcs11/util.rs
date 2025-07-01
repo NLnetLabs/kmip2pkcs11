@@ -167,6 +167,20 @@ pub fn get_cached_handle_for_key(
         })
 }
 
+pub fn get_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Cfg) -> Result<String, Error> {
+    let pkcs11 = pkcs11pool.pkcs11();
+    let slot = pkcs11pool.slot();
+    let token_info = pkcs11.get_token_info(slot)?;
+    let slot_info = pkcs11.get_slot_info(slot)?;
+    let lib_name = cfg.lib_path.file_name().unwrap();
+    Ok(format!(
+        "Using PKCS#11 token with label {} in slot {} via library {}",
+        token_info.label(),
+        slot_info.slot_description(),
+        lib_name.display()
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -14,7 +14,10 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
 
-use crate::kmip::operations::{activate, create_key_pair, get, sign, unknown};
+use crate::config::Cfg;
+use crate::kmip::operations::{
+    activate, create_key_pair, discover_versions, get, query, sign, unknown,
+};
 use crate::kmip::util::{mk_err_batch_item, mk_kmip_hex_dump, mk_response};
 use crate::pkcs11::pool::Pkcs11Pool;
 
@@ -23,6 +26,7 @@ pub type HandleCache = Cache<String, ObjectHandle>;
 pub async fn handle_client_requests(
     mut stream: TlsStream<TcpStream>,
     peer_addr: SocketAddr,
+    cfg: Cfg,
     pkcs11pool: Pkcs11Pool,
 ) -> anyhow::Result<()> {
     let reader_config = Config::new();
@@ -81,7 +85,9 @@ pub async fn handle_client_requests(
                     let res = match batch_item.operation() {
                         Operation::Activate => activate::op(pkcs11conn, batch_item),
                         Operation::CreateKeyPair => create_key_pair::op(pkcs11conn, batch_item),
+                        Operation::DiscoverVersions => discover_versions::op(batch_item),
                         Operation::Get => get::op(pkcs11conn, batch_item),
+                        Operation::Query => query::op(&pkcs11pool, &cfg, batch_item),
                         Operation::Sign => sign::op(pkcs11conn, batch_item),
                         _ => unknown::op(batch_item),
                     };

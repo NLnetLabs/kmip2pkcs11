@@ -19,7 +19,7 @@ use tracing_subscriber::fmt::format::FmtSpan;
 use crate::client_request_handler::handle_client_requests;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::Pkcs11Pool;
-use crate::pkcs11::util::init_pkcs11;
+use crate::pkcs11::util::{get_pkcs11_info, init_pkcs11};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -55,6 +55,7 @@ async fn main() -> Result<()> {
     loop {
         let (stream, peer_addr) = listener.accept().await?;
         let acceptor = acceptor.clone();
+        let cfg = cfg.clone();
         let pkcs11pool = pkcs11pool.clone();
 
         info!("Waiting for connections...");
@@ -62,11 +63,12 @@ async fn main() -> Result<()> {
             match acceptor.accept(stream).await {
                 Ok(stream) => {
                     info!("Accepting connection from {peer_addr}");
+                    let cfg = cfg.clone();
                     let pkcs11pool = pkcs11pool.clone();
 
                     tokio::spawn(async move {
                         if let Err(err) =
-                            handle_client_requests(stream, peer_addr, pkcs11pool).await
+                            handle_client_requests(stream, peer_addr, cfg, pkcs11pool).await
                         {
                             error!("Connection with {peer_addr} terminated abnormally: {err}");
                         } else {
@@ -83,16 +85,6 @@ async fn main() -> Result<()> {
 }
 
 fn announce_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Cfg) -> Result<(), Error> {
-    let pkcs11 = pkcs11pool.pkcs11();
-    let slot = pkcs11pool.slot();
-    let token_info = pkcs11.get_token_info(slot)?;
-    let slot_info = pkcs11.get_slot_info(slot)?;
-    let lib_name = cfg.lib_path.file_name().unwrap();
-    info!(
-        "Using PKCS#11 token with label {} in slot {} via library {}",
-        token_info.label(),
-        slot_info.slot_description(),
-        lib_name.display()
-    );
+    info!("{}", get_pkcs11_info(pkcs11pool, cfg)?);
     Ok(())
 }

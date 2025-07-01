@@ -162,7 +162,7 @@ pub fn get_cached_handle_for_key(
                 }
             }
 
-            info!("Missing");
+            info!("Missing or more than one match");
             None
         })
 }

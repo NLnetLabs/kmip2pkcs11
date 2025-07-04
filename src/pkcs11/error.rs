@@ -43,6 +43,9 @@ pub enum Error {
 
     /// All randomly generated CKA_ID values already existed.
     NoFreeKeyIdAvailable,
+
+    /// Wrongly encoded data was encountered.
+    MalformedDataReceived(String),
 }
 
 impl Error {
@@ -234,8 +237,11 @@ impl Display for Error {
             ),
             Error::NoFreeKeyIdAvailable => write!(
                 f,
-                "Failed to generate a CKA_ID value that isn't already taken by an existing key"
+                "Relay faile to generate a CKA_ID value that isn't already taken by an existing key"
             ),
+            Error::MalformedDataReceived(err) => {
+                write!(f, "Relay received malformed PKCS#11 data: {err}")
+            }
         }
     }
 }

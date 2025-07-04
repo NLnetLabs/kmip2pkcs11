@@ -1,5 +1,9 @@
+use bcder::decode::IntoSource;
+use bcder::encode::{Nothing, PrimitiveContent, Values};
+use bcder::{BitString, ConstOid, Mode, OctetString, Oid};
 use cryptoki::mechanism::MechanismType;
 use cryptoki::object::{Attribute, AttributeType, KeyType, ObjectClass, ObjectHandle};
+use domain::utils::base16;
 use kmip::types::common::{
     CryptographicAlgorithm, KeyFormatType, KeyMaterial, TransparentRSAPublicKey, UniqueIdentifier,
 };
@@ -9,6 +13,16 @@ use log::{info, trace};
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::Pkcs11Connection;
 use crate::pkcs11::util::get_cached_handle_for_key;
+
+/// [RFC 5480](https://tools.ietf.org/html/rfc5480) `ecPublicKey`.
+///
+/// Identifies public keys for elliptic curve cryptography.
+const EC_PUBLIC_KEY_OID: ConstOid = Oid(&[42, 134, 72, 206, 61, 2, 1]);
+
+/// [RFC 5480](https://tools.ietf.org/html/rfc5480) `secp256r1`.
+///
+/// Identifies the P-256 curve for elliptic curve cryptography.
+pub const SECP256R1_OID: ConstOid = Oid(&[42, 134, 72, 206, 61, 3, 1, 7]);
 
 pub fn get_public_key(
     pkcs11conn: Pkcs11Connection,
@@ -80,15 +94,13 @@ fn get_public_key_details(
                 }
             }
 
-            Attribute::KeyType(key_type) => {
-                match key_type {
-                    KeyType::RSA => cryptographic_algorithm = Some(CryptographicAlgorithm::RSA),
-                    KeyType::EC => cryptographic_algorithm = Some(CryptographicAlgorithm::ECDSA),
-                    _ => {
-                        return Err(Error::unsupported_key_type(key_type));
-                    }
+            Attribute::KeyType(key_type) => match key_type {
+                KeyType::RSA => cryptographic_algorithm = Some(CryptographicAlgorithm::RSA),
+                KeyType::EC => cryptographic_algorithm = Some(CryptographicAlgorithm::ECDSA),
+                _ => {
+                    return Err(Error::unsupported_key_type(key_type));
                 }
-            }
+            },
 
             Attribute::KeyGenMechanism(mechanism_type) => {
                 if mechanism_type == MechanismType::RSA_PKCS_KEY_PAIR_GEN {
@@ -117,13 +129,62 @@ fn get_public_key_details(
                 public_exponent = Some(bytes);
             }
 
-            Attribute::EcPoint(bytes) => {
-                // Convert to DER encoding in the following form:
-                // SubjectPublicKeyInfo SEQUENCE @0+89 (constructed): (2 elem)
-                //  algorithm AlgorithmIdentifier SEQUENCE @2+19 (constructed): (2 elem)
-                //    algorithm OBJECT_IDENTIFIER @4+7: 1.2.840.10045.2.1|ecPublicKey|ANSI X9.62 public key type
-                //    parameters ANY OBJECT_IDENTIFIER @13+8: 1.2.840.10045.3.1.7|prime256v1|ANSI X9.62 named elliptic curve
-                //  subjectPublicKey BIT_STRING @23+66: (520 bit)
+            Attribute::EcPoint(der_octet_string) => {
+                // The KMIP client expects to receive an ASN.1 DER encoded
+                // SubjectPublicKeyInfo response like so, but we receive an
+                // ASN.1 DER OCTET STRING.
+                //
+                //   SubjectPublicKeyInfo SEQUENCE @0+89 (constructed): (2 elem)
+                //     algorithm AlgorithmIdentifier SEQUENCE @2+19 (constructed): (2 elem)
+                //       algorithm OBJECT_IDENTIFIER @4+7: 1.2.840.10045.2.1|ecPublicKey|ANSI X9.62 public key type
+                //       parameters ANY OBJECT_IDENTIFIER @13+8: 1.2.840.10045.3.1.7|prime256v1|ANSI X9.62 named elliptic curve
+                //     subjectPublicKey BIT_STRING @23+66: (520 bit)
+                //
+                // From: https://www.rfc-editor.org/rfc/rfc5480.html#section-2.1.1
+                //   The parameter for id-ecPublicKey is as follows and MUST always be
+                //   present:
+                //
+                //     ECParameters ::= CHOICE {
+                //       namedCurve         OBJECT IDENTIFIER
+                //       -- implicitCurve   NULL
+                //       -- specifiedCurve  SpecifiedECDomain
+                //     }
+                //       -- implicitCurve and specifiedCurve MUST NOT be used in PKIX.
+                //       -- Details for SpecifiedECDomain can be found in [X9.62].
+                //       -- Any future additions to this CHOICE should be coordinated
+                //       -- with ANSI X9.
+                info!(
+                    "Received {} bytes of EcPoint: {}",
+                    der_octet_string.len(),
+                    base16::encode_display(&der_octet_string)
+                );
+
+                let algorithm = bcder::encode::Choice2::<Nothing, _>::Two(bcder::encode::sequence(
+                    (EC_PUBLIC_KEY_OID.encode(), SECP256R1_OID.encode()),
+                ));
+
+                let inner_bytes = bcder::Mode::Der
+                    .decode(der_octet_string.into_source(), |cons| {
+                        OctetString::take_from(cons)
+                    })
+                    .map_err(|err| {
+                        Error::MalformedDataReceived(format!(
+                            "Failed to parse CKA_EC_POINT value as a DER OCTET STRING: {err}"
+                        ))
+                    })?
+                    .into_bytes();
+
+                info!(
+                    "Converted EcPoint to {} bytes: {}",
+                    inner_bytes.len(),
+                    base16::encode_display(&inner_bytes)
+                );
+                let subject_public_key = BitString::new(0, inner_bytes);
+
+                let bytes = bcder::encode::sequence((algorithm, subject_public_key.encode()))
+                    .to_captured(Mode::Der)
+                    .to_vec();
+
                 ec_point = Some(bytes);
             }
 
@@ -176,11 +237,6 @@ fn get_public_key_details(
                     key_handle,
                 ));
             };
-
-            // BitString::new(
-            //     0,
-            //     pub_key_sequence.to_captured(Mode::Der).into_bytes()
-            // ),
 
             (KeyFormatType::Raw, KeyMaterial::Bytes(ec_point))
         }

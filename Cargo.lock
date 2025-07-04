@@ -388,7 +388,7 @@ dependencies = [
 [[package]]
 name = "domain"
 version = "0.11.1-dev"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#53fd6ca803907023c9f15af6a34a6caa71ba773d"
+source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#aec3c7927a2a93b349302187159e328281ed59e5"
 dependencies = [
  "bumpalo",
  "bytes",
@@ -405,7 +405,7 @@ dependencies = [
 [[package]]
 name = "domain-macros"
 version = "0.11.1-dev"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#53fd6ca803907023c9f15af6a34a6caa71ba773d"
+source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#aec3c7927a2a93b349302187159e328281ed59e5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -578,6 +578,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "io-uring"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b86e202f00093dcba4275d4636b93ef9dd75d025ae560d2521b45ea28ab49013"
+dependencies = [
+ "bitflags 2.9.1",
+ "cfg-if",
+ "libc",
 ]
 
 [[package]]
@@ -801,6 +812,7 @@ name = "nameshed-hsm-relay"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bcder",
  "clap",
  "cryptoki",
  "domain",
@@ -1398,6 +1410,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "slab"
+version = "0.4.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04dc19736151f35336d325007ac991178d504a119863a2fcb3758cdb5e52c50d"
+
+[[package]]
 name = "smallvec"
 version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1509,17 +1527,19 @@ checksum = "c9e9a38711f559d9e3ce1cdb06dd7c5b8ea546bc90052da6d06bb76da74bb07c"
 
 [[package]]
 name = "tokio"
-version = "1.45.1"
+version = "1.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75ef51a33ef1da925cea3e4eb122833cb377c61439ca401b770f54902b806779"
+checksum = "1140bb80481756a8cbe10541f37433b459c5aa1e727b4c020fbfebdc25bf3ec4"
 dependencies = [
  "backtrace",
  "bytes",
+ "io-uring",
  "libc",
  "mio",
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
+ "slab",
  "socket2",
  "tokio-macros",
  "windows-sys 0.52.0",

@@ -1,3 +1,5 @@
+use bcder::Mode;
+use bcder::encode::{PrimitiveContent, Values};
 use cryptoki::mechanism::{Mechanism, MechanismType};
 use cryptoki::object::{Attribute, AttributeType};
 use domain::crypto::common::{DigestBuilder, DigestType};
@@ -125,5 +127,46 @@ pub fn sign(
 
     let signature_data = pkcs11conn.session().sign(&mechanism, key_handle, &data)?;
 
-    Ok(signature_data)
+    if matches!(mechanism, Mechanism::Ecdsa) {
+        // Check that the signature is of the form r | s (where | denotes
+        // concatenation) where both r and s are 32 bytes long. (as
+        // ECDSAP256SHA256 uses 256-bit i.e. 32 byte values, and we're
+        // assuming that ECDSA here means ECDSAP256SHA256...)
+        if signature_data.len() != 64 {
+            return Err(Error::MalformedDataReceived(format!(
+                "Expected 64 byte ECDSAP256SHA256 signature but received {} bytes: {}",
+                signature_data.len(),
+                hex::encode_upper::<Vec<u8>>(signature_data)
+            )));
+        }
+
+        // Encode it as expected by the KMIP client, e.g. this is the ECDSA
+        // signature received from a Fortanix DSM:
+        //
+        //   $ echo '<hex encoded signature data>' | xxd -r -p | dumpasn1 -
+        //     0  69: SEQUENCE {
+        //     2  33:   INTEGER
+        //          :     00 C6 A7 D1 2E A1 0C B4 96 BD D9 A5 48 2C 9B F4
+        //          :     0C EC 9F FC EF 1A 0D 59 BB B9 24 F3 FE DA DC F8
+        //          :     9E
+        //    37  32:   INTEGER :     4B A7 22 69 F2 F8 65 88 63 D0 25 D3 A9
+        //          D5 92 4F :     A2 21 BD 59 CD 27 60 6D 16 C3 79 EF B4 0A
+        //          CA 33 :   }
+        //
+        // Where the two integer values are known as 'r' and 's'.
+
+        log::info!("Converting...");
+        Ok(bcder::encode::sequence((
+            bcder::Unsigned::from_slice(&signature_data[0..32])
+                .unwrap()
+                .encode(),
+            bcder::Unsigned::from_slice(&signature_data[32..])
+                .unwrap()
+                .encode(),
+        ))
+        .to_captured(Mode::Der)
+        .to_vec())
+    } else {
+        Ok(signature_data)
+    }
 }

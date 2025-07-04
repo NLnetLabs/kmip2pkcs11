@@ -29,6 +29,7 @@ pub fn op(
     let mut pub_attrs = vec![];
     let mut priv_attrs = vec![]; // TODO: Optionally include Attribute::Extractable(true)?
     let mut mechanism: Option<Mechanism> = None;
+    let mut modulus = None;
 
     if let Some(common_attrs) = common_attrs {
         for attr in common_attrs.attributes() {
@@ -86,9 +87,7 @@ pub fn op(
             } else if attr.name() == "Cryptographic Length" {
                 if let AttributeValue::Integer(key_size) = attr.value() {
                     // TODO: SAFETY!
-                    pub_attrs.push(Attribute::ModulusBits(
-                        (*key_size as usize).try_into().unwrap(),
-                    ));
+                    modulus = Some(*key_size);
                 }
             }
         }
@@ -142,6 +141,14 @@ pub fn op(
             "Only ECDSA and RSA key types can be generated".to_string(),
         ));
     };
+
+    if matches!(mechanism, Mechanism::RsaPkcsKeyPairGen) {
+        if let Some(modulus) = modulus {
+             pub_attrs.push(Attribute::ModulusBits(
+                 (modulus as usize).try_into().unwrap(),
+            ));
+        }
+    }
 
     // TODO: Detect sign mask in the above and push it as an attr.
 

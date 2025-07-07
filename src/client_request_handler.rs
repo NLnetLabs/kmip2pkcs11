@@ -80,6 +80,7 @@ pub async fn handle_client_requests(
                         batch_item.operation()
                     );
 
+                    let start = std::time::Instant::now();
                     let pkcs11conn = pkcs11pool.get()?;
 
                     // Note: we are NOT compliant with the KMIP 1.2 Baseline
@@ -103,6 +104,13 @@ pub async fn handle_client_requests(
                         Operation::Sign => sign::op(pkcs11conn, batch_item),
                         _ => unknown::op(batch_item),
                     };
+
+                    info!(
+                        "Processed batch item operation {} from client {peer_addr} in {}us: {}",
+                        batch_item.operation(),
+                        start.elapsed().as_micros(),
+                        if res.is_ok() { "Succeeded" } else { "Failed" },
+                    );
 
                     let res_batch_item = match res {
                         Ok(res_batch_item) => res_batch_item,

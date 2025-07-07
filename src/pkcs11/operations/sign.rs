@@ -155,7 +155,6 @@ pub fn sign(
         //
         // Where the two integer values are known as 'r' and 's'.
 
-        log::info!("Converting...");
         Ok(bcder::encode::sequence((
             bcder::Unsigned::from_slice(&signature_data[0..32])
                 .unwrap()

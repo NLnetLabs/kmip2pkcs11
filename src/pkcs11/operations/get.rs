@@ -153,7 +153,7 @@ fn get_public_key_details(
                 //       -- Details for SpecifiedECDomain can be found in [X9.62].
                 //       -- Any future additions to this CHOICE should be coordinated
                 //       -- with ANSI X9.
-                info!(
+                trace!(
                     "Received {} bytes of EcPoint: {}",
                     der_octet_string.len(),
                     base16::encode_display(&der_octet_string)
@@ -174,7 +174,7 @@ fn get_public_key_details(
                     })?
                     .into_bytes();
 
-                info!(
+                trace!(
                     "Converted EcPoint to {} bytes: {}",
                     inner_bytes.len(),
                     base16::encode_display(&inner_bytes)

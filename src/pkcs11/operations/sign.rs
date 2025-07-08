@@ -149,9 +149,10 @@ pub fn sign(
         //          :     00 C6 A7 D1 2E A1 0C B4 96 BD D9 A5 48 2C 9B F4
         //          :     0C EC 9F FC EF 1A 0D 59 BB B9 24 F3 FE DA DC F8
         //          :     9E
-        //    37  32:   INTEGER :     4B A7 22 69 F2 F8 65 88 63 D0 25 D3 A9
-        //          D5 92 4F :     A2 21 BD 59 CD 27 60 6D 16 C3 79 EF B4 0A
-        //          CA 33 :   }
+        //    37  32:   INTEGER
+        //          :     4B A7 22 69 F2 F8 65 88 63 D0 25 D3 A9 D5 92 4F
+        //          :     A2 21 BD 59 CD 27 60 6D 16 C3 79 EF B4 0A CA 33
+        //          : }
         //
         // Where the two integer values are known as 'r' and 's'.
 

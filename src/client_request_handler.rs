@@ -123,19 +123,19 @@ pub async fn handle_client_requests(
                             pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string()))?;
 
                             match batch_item.operation() {
-                        Operation::Activate => activate::op(pkcs11conn, batch_item),
+                                Operation::Activate => activate::op(pkcs11conn, batch_item),
                                 Operation::CreateKeyPair => {
                                     create_key_pair::op(pkcs11conn, batch_item)
                                 }
-                        Operation::DiscoverVersions => discover_versions::op(batch_item),
-                        Operation::Get => get::op(pkcs11conn, batch_item),
-                        Operation::Sign => sign::op(pkcs11conn, batch_item),
-                        _ => unknown::op(batch_item),
+                                Operation::DiscoverVersions => discover_versions::op(batch_item),
+                                Operation::Get => get::op(pkcs11conn, batch_item),
+                                Operation::Sign => sign::op(pkcs11conn, batch_item),
+                                _ => unknown::op(batch_item),
                             }
                         }
                     };
 
-                    info!(
+                    debug!(
                         "Processed batch item operation {} from client {peer_addr} in {}us: {}",
                         batch_item.operation(),
                         start.elapsed().as_micros(),

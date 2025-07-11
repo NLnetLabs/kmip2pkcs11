@@ -3,7 +3,7 @@ name = "nameshed-hsm-relay"
 version = "0.1.0"
 edition = "2024"
 authors = ["NLnet Labs <nameshed@nlnetlabs.nl>"]
-description = "KMIP to PKCS#11 HSM relay for the Nameshed project"
+description = "KMIP to PKCS#11 HSM relay for the Nameshed project."
 repository = "https://github.com/NLnetLabs/nameshed-hsm-relay/"
 keywords = ["KMIP", "PKCS#11", "HSM", "Rust"]
 categories = ["cryptography"]
@@ -29,13 +29,14 @@ log = "0.4"
 moka = { version = "0.12.10", features = ["sync"] }
 r2d2 = "0.8.10"
 rand = "0.9.1"
+rcgen = { version = "0.14.2", optional = true }
 rpki = { version = "0.18", features = ["crypto"] }
-tokio = { version = "1.44.2", features = ["macros", "net", "rt-multi-thread"] }
-rustls = "0.23.26"
+tokio = { version = "1.46.1", features = ["macros", "net", "rt-multi-thread"] }
+rustls = "0.23.29"
 tokio-rustls = "0.26.2"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
 [features]
-default = ["domain/ring"]
+default = ["domain/ring", "rcgen"]
 
 openssl = ["domain/openssl"]

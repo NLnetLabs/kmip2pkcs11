@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::result::Result;
+use std::sync::{Arc, RwLock};
 
 use cryptoki::context::{CInitializeArgs, Function, Pkcs11};
 use cryptoki::object::{Attribute, ObjectClass, ObjectHandle};
@@ -11,7 +14,40 @@ use crate::config::Cfg;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
 
-pub fn init_pkcs11(cfg: &mut Cfg) -> Result<Pkcs11Pool, Error> {
+// Create a collection of PKCS#11 pools, one per PKCS#11 slot as defined in
+// the KMIP username of incoming requests. This collection will need to be
+// modified at runtime as requests are received. As requests are handled by
+// whichever Tokio thread handles the spawned task we must be able to modify
+// the collection of pools from any thread at any time.
+#[derive(Clone)]
+pub struct Pkcs11Pools {
+    pkcs11: Pkcs11,
+    pools: Arc<RwLock<HashMap<String, Pkcs11Pool>>>,
+}
+
+impl Pkcs11Pools {
+    pub fn get(&self, slot_str: &str) -> Result<Pkcs11Pool, Error> {
+        let mut pools = self.pools.write().unwrap();
+        match pools.entry(slot_str.to_string()) {
+            Entry::Occupied(entry) => Ok(entry.get().clone()),
+            Entry::Vacant(entry) => {
+                let slot = get_slot(&self.pkcs11, slot_str)?;
+                let pool = Pkcs11Pool::new(self.pkcs11.clone(), slot)?;
+                let _ = entry.insert(pool.clone());
+                Ok(pool)
+            }
+        }
+    }
+
+    pub fn new(pkcs11: Pkcs11) -> Self {
+        Self {
+            pkcs11,
+            pools: Default::default(),
+        }
+    }
+}
+
+pub fn init_pkcs11(cfg: &mut Cfg) -> Result<Pkcs11, Error> {
     let pkcs11 = Pkcs11::new(&cfg.lib_path)?;
     pkcs11.initialize(CInitializeArgs::OsThreads)?;
     for f in [
@@ -30,12 +66,12 @@ pub fn init_pkcs11(cfg: &mut Cfg) -> Result<Pkcs11Pool, Error> {
             ));
         }
     }
-    let slot = get_slot(&pkcs11, &cfg)?;
-    let pool = Pkcs11Pool::new(pkcs11, slot, cfg.user_pin.take())?;
-    Ok(pool)
+    Ok(pkcs11)
 }
 
-pub fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> Result<Slot, Error> {
+/// Locate a PKCS#11 slot by token label, slot id or slot index, in that
+/// order.
+pub fn get_slot(pkcs11: &Pkcs11, slot_str: &str) -> Result<Slot, Error> {
     fn has_token_label(pkcs11: &Pkcs11, slot: Slot, slot_label: &str) -> bool {
         pkcs11
             .get_token_info(slot)
@@ -43,45 +79,38 @@ pub fn get_slot(pkcs11: &Pkcs11, cfg: &Cfg) -> Result<Slot, Error> {
             .unwrap_or(false)
     }
 
-    let slot = match (&cfg.slot_id, &cfg.slot_label) {
-        // Match slot by label then id.
-        (Some(id), Some(label)) => {
-            let slot = pkcs11
-                .get_slots_with_initialized_token()?
-                .into_iter()
-                .find(|&slot| has_token_label(pkcs11, slot, label))
-                .ok_or(Error::not_found("slot", "slot label", label))?;
+    // First try finding a slot with a matching token label.
+    if let Some(slot) = pkcs11
+        .get_slots_with_initialized_token()?
+        .into_iter()
+        .find(|&slot| has_token_label(pkcs11, slot, slot_str))
+    {
+        return Ok(slot);
+    }
 
-            if slot.id() != *id {
-                return Err(Error::not_found("slot", "slot id", id));
-            }
-
-            slot
-        }
-
-        // Match slot by label.
-        (None, Some(label)) => pkcs11
+    // Next try finding a slot with a matching id
+    if let Ok(slot_id) = slot_str.parse::<u64>() {
+        if let Some(slot) = pkcs11
             .get_slots_with_initialized_token()?
             .into_iter()
-            .find(|&slot| has_token_label(pkcs11, slot, label))
-            .ok_or(Error::not_found("slot", "slot label", label))?,
+            .find(|&slot| slot.id() == slot_id)
+        {
+            return Ok(slot);
+        }
+    }
 
-        // Match slot by id.
-        (Some(id), None) => pkcs11
-            .get_all_slots()?
-            .into_iter()
-            .find(|&slot| slot.id() == *id)
-            .ok_or(Error::not_found("slot", "slot id", id))?,
+    // Lastly, try finding a slot by index
+    if let Ok(slot_index) = slot_str.parse::<usize>() {
+        if let Some(slot) = pkcs11.get_all_slots()?.get(slot_index) {
+            return Ok(*slot);
+        }
+    }
 
-        // Match slot by default id zero.
-        (None, None) => pkcs11
-            .get_all_slots()?
-            .into_iter()
-            .find(|&slot| slot.id() == 0)
-            .ok_or(Error::not_found("slot", "slot id", 0))?,
-    };
-
-    Ok(slot)
+    Err(Error::not_found(
+        "slot",
+        "slot label, id or index",
+        slot_str,
+    ))
 }
 
 pub fn generate_cka_id() -> [u8; 20] {

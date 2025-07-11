@@ -3,12 +3,13 @@ use core::net::SocketAddr;
 use std::io::ErrorKind;
 
 use cryptoki::object::ObjectHandle;
+use cryptoki::types::AuthPin;
 use kmip::Config;
 use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::ResultReason;
 use kmip_ttlv::PrettyPrinter;
-use log::{debug, error, info, log_enabled, warn};
+use log::{debug, error, log_enabled, warn};
 use moka::sync::Cache;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
@@ -19,7 +20,7 @@ use crate::kmip::operations::{
     activate, create_key_pair, discover_versions, get, query, sign, unknown,
 };
 use crate::kmip::util::{mk_err_batch_item, mk_kmip_hex_dump, mk_response};
-use crate::pkcs11::pool::Pkcs11Pool;
+use crate::pkcs11::util::Pkcs11Pools;
 
 pub type HandleCache = Cache<String, ObjectHandle>;
 
@@ -27,7 +28,7 @@ pub async fn handle_client_requests(
     mut stream: TlsStream<TcpStream>,
     peer_addr: SocketAddr,
     cfg: Cfg,
-    pkcs11pool: Pkcs11Pool,
+    pkcs11_pools: Pkcs11Pools,
 ) -> anyhow::Result<()> {
     let reader_config = Config::new();
     let tag_map = kmip::tag_map::make_kmip_tag_map();
@@ -74,14 +75,34 @@ pub async fn handle_client_requests(
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
                 }
 
+                let authentication = req.header().authentication();
+
+                let Some(slot_label_id_or_index) = authentication.and_then(|auth| auth.username())
+                else {
+                    res_batch_items.push(mk_err_batch_item(
+                        ResultReason::GeneralFailure,
+                        "Requests must be authenticated with a username (PKCS#11 slot label/id/index) and password (PKCS#11 pin)".to_string(),
+                    ));
+                    continue;
+                };
+
+                let Some(pin) = authentication.and_then(|auth| auth.password()) else {
+                    res_batch_items.push(mk_err_batch_item(
+                        ResultReason::GeneralFailure,
+                        "Requests must be authenticated with a username (PKCS#11 slot label/id/index) and password (PKCS#11 pin)".to_string(),
+                    ));
+                    continue;
+                };
+
+                let pool = pkcs11_pools.get(slot_label_id_or_index)?;
+
                 for batch_item in req.batch_items() {
-                    info!(
+                    debug!(
                         "Processing batch item operation {} from client {peer_addr}",
                         batch_item.operation()
                     );
 
                     let start = std::time::Instant::now();
-                    let pkcs11conn = pkcs11pool.get()?;
 
                     // Note: we are NOT compliant with the KMIP 1.2 Baseline
                     // Server profile [1] because we lack support for the
@@ -96,13 +117,22 @@ pub async fn handle_client_requests(
                     //   - Destroy (TODO: We will need to support this)
                     // [1]: https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.html#_Toc409613184
                     let res = match batch_item.operation() {
+                        Operation::Query => query::op(&pool, &cfg, batch_item),
+                        _ => {
+                            let pkcs11conn = pool.get()?;
+                            pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string()))?;
+
+                            match batch_item.operation() {
                         Operation::Activate => activate::op(pkcs11conn, batch_item),
-                        Operation::CreateKeyPair => create_key_pair::op(pkcs11conn, batch_item),
+                                Operation::CreateKeyPair => {
+                                    create_key_pair::op(pkcs11conn, batch_item)
+                                }
                         Operation::DiscoverVersions => discover_versions::op(batch_item),
                         Operation::Get => get::op(pkcs11conn, batch_item),
-                        Operation::Query => query::op(&pkcs11pool, &cfg, batch_item),
                         Operation::Sign => sign::op(pkcs11conn, batch_item),
                         _ => unknown::op(batch_item),
+                            }
+                        }
                     };
 
                     info!(

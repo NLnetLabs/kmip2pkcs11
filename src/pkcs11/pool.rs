@@ -28,7 +28,7 @@ pub struct Pkcs11Pool {
 }
 
 impl Pkcs11Pool {
-    pub fn new(pkcs11: Pkcs11, slot: Slot, user_pin: Option<AuthPin>) -> Result<Self, Error> {
+    pub fn new(pkcs11: Pkcs11, slot: Slot) -> Result<Self, Error> {
         fn log_prop(desc: &'static str, opt: Option<u32>) {
             let v = opt.map(|v| v.to_string()).unwrap_or("Unknown".to_string());
             info!("{desc}: {v}");
@@ -49,7 +49,7 @@ impl Pkcs11Pool {
 
         // Create the PKCS#11 connection pool using the established limits.
         info!("Chosen PKCS#11 connection pool limits: min={min_pool_size}, max={max_pool_size}");
-        let manager = Pkcs11ConnectionManager::new(pkcs11.clone(), slot, user_pin);
+        let manager = Pkcs11ConnectionManager::new(pkcs11.clone(), slot);
         let pool = r2d2::Builder::new()
             .max_size(max_pool_size)
             .min_idle(Some(min_pool_size))
@@ -99,16 +99,11 @@ impl Deref for Pkcs11Pool {
 pub struct Pkcs11ConnectionManager {
     pkcs11: Pkcs11,
     slot: Slot,
-    user_pin: Option<AuthPin>,
 }
 
 impl Pkcs11ConnectionManager {
-    pub fn new(pkcs11: Pkcs11, slot: Slot, user_pin: Option<AuthPin>) -> Self {
-        Self {
-            pkcs11,
-            slot,
-            user_pin,
-        }
+    pub fn new(pkcs11: Pkcs11, slot: Slot) -> Self {
+        Self { pkcs11, slot }
     }
 }
 
@@ -132,6 +127,14 @@ impl PoolConnection {
     pub fn handle_cache(&self) -> &HandleCache {
         &self.handle_cache
     }
+
+    pub fn ensure_logged_in(&self, pin: AuthPin) -> Result<(), Error> {
+        if self.session.get_session_info()?.session_state() != SessionState::RwUser {
+            debug!("Login required");
+            self.session.login(UserType::User, Some(&pin))?;
+        }
+        Ok(())
+    }
 }
 
 impl ManageConnection for Pkcs11ConnectionManager {
@@ -141,35 +144,21 @@ impl ManageConnection for Pkcs11ConnectionManager {
 
     fn connect(&self) -> Result<Self::Connection, Self::Error> {
         let session = self.pkcs11.open_rw_session(self.slot)?;
-        if session.get_session_info()?.session_state() != SessionState::RwUser {
-            debug!("Login required");
-            session
-                .login(UserType::User, self.user_pin.as_ref())
-                .or_else(|err| {
-                    if let Self::Error::Pkcs11(RvError::UserAlreadyLoggedIn, Function::Login) = err
-                    {
-                        Ok(())
-                    } else {
-                        Err(err)
-                    }
-                })?;
-        } else {
-            debug!("Login NOT required");
-        }
         let handle_cache = HandleCache::new(100);
         Ok(PoolConnection::new(session, handle_cache))
     }
 
     fn is_valid(&self, conn: &mut PoolConnection) -> Result<(), Self::Error> {
         debug!("Testing session validity");
-        if conn.session().get_session_info()?.session_state() == SessionState::RwUser {
-            Ok(())
-        } else {
-            debug!("Session is no longer valid (not logged in as a R/W user");
-            Err(Self::Error::Pkcs11(
-                RvError::UserNotLoggedIn,
-                Function::GetSessionInfo,
-            ))
+        match conn.session().get_session_info().is_ok() {
+            true => Ok(()),
+            false => {
+                debug!("Session is no longer valid (not logged in as a R/W user");
+                Err(Self::Error::Pkcs11(
+                    RvError::UserNotLoggedIn,
+                    Function::GetSessionInfo,
+                ))
+            }
         }
     }
 

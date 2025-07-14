@@ -30,7 +30,6 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .with_thread_ids(true)
-        .without_time()
         .with_span_events(FmtSpan::ENTER)
         .try_init()
         .ok();

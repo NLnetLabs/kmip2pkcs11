@@ -7,7 +7,7 @@ use cryptoki::types::AuthPin;
 use kmip::Config;
 use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
-use kmip::types::response::ResultReason;
+use kmip::types::response::{BatchItem, ResultReason};
 use kmip_ttlv::PrettyPrinter;
 use log::{debug, error, log_enabled, warn};
 use moka::sync::Cache;
@@ -75,80 +75,7 @@ pub async fn handle_client_requests(
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
                 }
 
-                let authentication = req.header().authentication();
-
-                let Some(slot_label_id_or_index) = authentication.and_then(|auth| auth.username())
-                else {
-                    res_batch_items.push(mk_err_batch_item(
-                        ResultReason::GeneralFailure,
-                        "Requests must be authenticated with a username (PKCS#11 slot label/id/index) and password (PKCS#11 pin)".to_string(),
-                    ));
-                    continue;
-                };
-
-                let Some(pin) = authentication.and_then(|auth| auth.password()) else {
-                    res_batch_items.push(mk_err_batch_item(
-                        ResultReason::GeneralFailure,
-                        "Requests must be authenticated with a username (PKCS#11 slot label/id/index) and password (PKCS#11 pin)".to_string(),
-                    ));
-                    continue;
-                };
-
-                let pool = pkcs11_pools.get(slot_label_id_or_index)?;
-
-                for batch_item in req.batch_items() {
-                    debug!(
-                        "Processing batch item operation {} from client {peer_addr}",
-                        batch_item.operation()
-                    );
-
-                    let start = std::time::Instant::now();
-
-                    // Note: we are NOT compliant with the KMIP 1.2 Baseline
-                    // Server profile [1] because we lack support for the
-                    // following KMIP operations:
-                    //   - Locate
-                    //   - Check
-                    //   - Get Attributes
-                    //   - Add Attribute
-                    //   - Modify Attribute
-                    //   - Delete Attribute
-                    //   - Revoke
-                    //   - Destroy (TODO: We will need to support this)
-                    // [1]: https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.html#_Toc409613184
-                    let res = match batch_item.operation() {
-                        Operation::Query => query::op(&pool, &cfg, batch_item),
-                        _ => {
-                            let pkcs11conn = pool.get()?;
-                            pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string()))?;
-
-                            match batch_item.operation() {
-                                Operation::Activate => activate::op(pkcs11conn, batch_item),
-                                Operation::CreateKeyPair => {
-                                    create_key_pair::op(pkcs11conn, batch_item)
-                                }
-                                Operation::DiscoverVersions => discover_versions::op(batch_item),
-                                Operation::Get => get::op(pkcs11conn, batch_item),
-                                Operation::Sign => sign::op(pkcs11conn, batch_item),
-                                _ => unknown::op(batch_item),
-                            }
-                        }
-                    };
-
-                    debug!(
-                        "Processed batch item operation {} from client {peer_addr} in {}us: {}",
-                        batch_item.operation(),
-                        start.elapsed().as_micros(),
-                        if res.is_ok() { "Succeeded" } else { "Failed" },
-                    );
-
-                    let res_batch_item = match res {
-                        Ok(res_batch_item) => res_batch_item,
-                        Err((reason, message)) => mk_err_batch_item(reason, message),
-                    };
-
-                    res_batch_items.push(res_batch_item);
-                }
+                res_batch_items.append(&mut process_request(&cfg, &pkcs11_pools, peer_addr, req)?);
             }
 
             Err((err, _cap)) if is_disconnection_err(&err) => {
@@ -190,6 +117,98 @@ pub async fn handle_client_requests(
 
         stream.write_all(&res_bytes).await?;
     }
+}
+
+fn process_request(
+    cfg: &Cfg,
+    pkcs11_pools: &Pkcs11Pools,
+    peer_addr: SocketAddr,
+    req: RequestMessage,
+) -> anyhow::Result<Vec<BatchItem>> {
+    let authentication = req.header().authentication();
+
+    let Some(slot_label_id_or_index) = authentication.and_then(|auth| auth.username()) else {
+        return Ok(vec![mk_err_batch_item(
+            ResultReason::GeneralFailure,
+            "Requests must be authenticated with a username (PKCS#11 slot label/id/index)"
+                .to_string(),
+        )]);
+    };
+
+    let Some(pin) = authentication.and_then(|auth| auth.password()) else {
+        return Ok(vec![mk_err_batch_item(
+            ResultReason::GeneralFailure,
+            "Requests must be authenticated with a password (PKCS#11 pin)".to_string(),
+        )]);
+    };
+
+    let pool = match pkcs11_pools.get(slot_label_id_or_index) {
+        Ok(pool) => pool,
+        Err(err) => {
+            return Ok(vec![mk_err_batch_item(
+                ResultReason::AuthenticationNotSuccessful,
+                format!("No PKCS#11 slot found: {err}",),
+            )]);
+        }
+    };
+
+    let mut res_batch_items = vec![];
+
+    for batch_item in req.batch_items() {
+        debug!(
+            "Processing batch item operation {} from client {peer_addr}",
+            batch_item.operation()
+        );
+
+        let start = std::time::Instant::now();
+
+        // Note: we are NOT compliant with the KMIP 1.2 Baseline
+        // Server profile [1] because we lack support for the
+        // following KMIP operations:
+        //   - Locate
+        //   - Check
+        //   - Get Attributes
+        //   - Add Attribute
+        //   - Modify Attribute
+        //   - Delete Attribute
+        //   - Revoke
+        //   - Destroy (TODO: We will need to support this)
+        // [1]: https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.html#_Toc409613184
+        let res = match batch_item.operation() {
+            Operation::Query => query::op(&pool, &cfg, batch_item),
+            _ => {
+                let pkcs11conn = pool.get()?;
+                if let Err(err) = pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string())) {
+                    Err((ResultReason::AuthenticationNotSuccessful, err.to_string()))
+                } else {
+                    match batch_item.operation() {
+                        Operation::Activate => activate::op(pkcs11conn, batch_item),
+                        Operation::CreateKeyPair => create_key_pair::op(pkcs11conn, batch_item),
+                        Operation::DiscoverVersions => discover_versions::op(batch_item),
+                        Operation::Get => get::op(pkcs11conn, batch_item),
+                        Operation::Sign => sign::op(pkcs11conn, batch_item),
+                        _ => unknown::op(batch_item),
+                    }
+                }
+            }
+        };
+
+        debug!(
+            "Processed batch item operation {} from client {peer_addr} in {}us: {}",
+            batch_item.operation(),
+            start.elapsed().as_micros(),
+            if res.is_ok() { "Succeeded" } else { "Failed" },
+        );
+
+        let res_batch_item = match res {
+            Ok(res_batch_item) => res_batch_item,
+            Err((reason, message)) => mk_err_batch_item(reason, message),
+        };
+
+        res_batch_items.push(res_batch_item);
+    }
+
+    Ok(res_batch_items)
 }
 
 fn is_supported_protocol_version(req: &RequestMessage) -> bool {

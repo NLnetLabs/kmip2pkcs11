@@ -11,7 +11,7 @@ use config::Cfg;
 use cryptoki::context::{Function, Pkcs11};
 use cryptoki::error::Error as CryptokiError;
 use cryptoki::error::RvError;
-use log::{error, info};
+use log::{error, info, warn};
 use rcgen::{CertifiedKey, generate_simple_self_signed};
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
@@ -121,7 +121,7 @@ fn load_or_generate_server_identity_cert(
         }
 
         _ => {
-            info!("Generating self-signed server identity certificate");
+            warn!("Generating self-signed server identity certificate");
             let CertifiedKey { cert, signing_key } =
                 generate_simple_self_signed(vec!["localhost".to_string()])?;
             let cert = cert.der().clone();

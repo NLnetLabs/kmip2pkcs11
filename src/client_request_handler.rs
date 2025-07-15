@@ -4,7 +4,7 @@ use std::io::ErrorKind;
 
 use cryptoki::object::ObjectHandle;
 use cryptoki::types::AuthPin;
-use kmip::Config;
+use daemonbase::error::ExitError;
 use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::{BatchItem, ResultReason};
@@ -15,7 +15,7 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
 
-use crate::config::Cfg;
+use crate::config::Config;
 use crate::kmip::operations::{
     activate, create_key_pair, discover_versions, get, query, sign, unknown,
 };
@@ -27,10 +27,10 @@ pub type HandleCache = Cache<String, ObjectHandle>;
 pub async fn handle_client_requests(
     mut stream: TlsStream<TcpStream>,
     peer_addr: SocketAddr,
-    cfg: Cfg,
+    config: Config,
     pkcs11_pools: Pkcs11Pools,
-) -> anyhow::Result<()> {
-    let reader_config = Config::new();
+) -> Result<(), ExitError> {
+    let reader_config = kmip::Config::new();
     let tag_map = kmip::tag_map::make_kmip_tag_map();
     let enum_map = kmip::tag_map::make_kmip_enum_map();
     let pp = PrettyPrinter::new()
@@ -75,7 +75,12 @@ pub async fn handle_client_requests(
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
                 }
 
-                res_batch_items.append(&mut process_request(&cfg, &pkcs11_pools, peer_addr, req)?);
+                res_batch_items.append(&mut process_request(
+                    &config,
+                    &pkcs11_pools,
+                    peer_addr,
+                    req,
+                )?);
             }
 
             Err((err, _cap)) if is_disconnection_err(&err) => {
@@ -115,16 +120,16 @@ pub async fn handle_client_requests(
             debug!("Response hex:\n{res_hex}\nResponse dump:\n{res_human}\n");
         }
 
-        stream.write_all(&res_bytes).await?;
+        stream.write_all(&res_bytes).await.unwrap();
     }
 }
 
 fn process_request(
-    cfg: &Cfg,
+    config: &Config,
     pkcs11_pools: &Pkcs11Pools,
     peer_addr: SocketAddr,
     req: RequestMessage,
-) -> anyhow::Result<Vec<BatchItem>> {
+) -> Result<Vec<BatchItem>, ExitError> {
     let authentication = req.header().authentication();
 
     let Some(slot_label_id_or_index) = authentication.and_then(|auth| auth.username()) else {
@@ -175,9 +180,9 @@ fn process_request(
         //   - Destroy (TODO: We will need to support this)
         // [1]: https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.html#_Toc409613184
         let res = match batch_item.operation() {
-            Operation::Query => query::op(&pool, &cfg, batch_item),
+            Operation::Query => query::op(&pool, config, batch_item),
             _ => {
-                let pkcs11conn = pool.get()?;
+                let pkcs11conn = pool.get().unwrap();
                 if let Err(err) = pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string())) {
                     Err((ResultReason::AuthenticationNotSuccessful, err.to_string()))
                 } else {

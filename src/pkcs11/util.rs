@@ -10,7 +10,7 @@ use kmip::types::common::UniqueIdentifier;
 use log::info;
 use rand::RngCore;
 
-use crate::config::Cfg;
+use crate::config::Config;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
 
@@ -47,7 +47,7 @@ impl Pkcs11Pools {
     }
 }
 
-pub fn init_pkcs11(cfg: &mut Cfg) -> Result<Pkcs11, Error> {
+pub fn init_pkcs11(cfg: &mut Config) -> Result<Pkcs11, Error> {
     let pkcs11 = Pkcs11::new(&cfg.lib_path)?;
     pkcs11.initialize(CInitializeArgs::OsThreads)?;
     for f in [
@@ -196,7 +196,7 @@ pub fn get_cached_handle_for_key(
         })
 }
 
-pub fn get_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Cfg) -> Result<String, Error> {
+pub fn get_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Config) -> Result<String, Error> {
     let pkcs11 = pkcs11pool.pkcs11();
     let slot = pkcs11pool.slot();
     let token_info = pkcs11.get_token_info(slot)?;

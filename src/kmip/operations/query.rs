@@ -8,13 +8,13 @@ use kmip::types::{
 };
 
 use crate::{
-    config::Cfg,
+    config::Config,
     pkcs11::{pool::Pkcs11Pool, util::get_pkcs11_info},
 };
 
 pub fn op(
     pkcs11pool: &Pkcs11Pool,
-    cfg: &Cfg,
+    cfg: &Config,
     batch_item: &BatchItem,
 ) -> Result<ResBatchItem, (ResultReason, std::string::String)> {
     let RequestPayload::Query(query_functions) = batch_item.request_payload() else {

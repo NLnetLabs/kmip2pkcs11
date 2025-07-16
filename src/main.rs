@@ -25,6 +25,13 @@ use crate::config::ServerIdentity;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::util::{Pkcs11Pools, init_pkcs11};
 
+impl From<pkcs11::error::Error> for ExitError {
+    fn from(err: pkcs11::error::Error) -> Self {
+        error!("PKCS#11 related fatal error: {err}");
+        ExitError::default()
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), ExitError> {
     Logger::init_logging()?;
@@ -46,20 +53,9 @@ async fn main() -> Result<(), ExitError> {
         "Loading and initializing PKCS#11 library {}",
         config.lib_path.display()
     );
-    let pkcs11 = init_pkcs11(&mut config).map_err(|err| {
-        if matches!(
-            err,
-            Error::HsmFailure(CryptokiError::Pkcs11(
-                RvError::ArgumentsBad,
-                Function::Initialize
-            ))
-        ) {
-            Error::UnusableConfig(format!("PKCS#11 function C_Initialize() failed. Please consult the documentation for the PKCS#11 library at '{}'. Possible causes include insufficient access rights (e.g. to read a PKCS#11 vendor specific configuration file) or missing PKCS#11 vendor specific environment variables.", config.lib_path.display()))
-        } else {
-            err
-        }
-    }).unwrap();
-    announce_pkcs11_info(&pkcs11).unwrap();
+    let pkcs11 =
+        init_pkcs11(&mut config).map_err(|err| improve_pkcs11_finalize_err(&config, err))?;
+    announce_pkcs11_info(&pkcs11)?;
     let pkcs11_pools = Pkcs11Pools::new(pkcs11);
 
     let (certs, key) = load_or_generate_server_identity_cert(config.server_identity.clone())?;
@@ -67,7 +63,8 @@ async fn main() -> Result<(), ExitError> {
     let rustls_config = rustls::ServerConfig::builder()
         .with_no_client_auth()
         .with_single_cert(certs, key)
-        .unwrap();
+        .inspect_err(|err| error!("TLS fatal error: {err}"))
+        .map_err(|_| ExitError::default())?;
     let acceptor = TlsAcceptor::from(Arc::new(rustls_config));
 
     let listener = TcpListener::bind(format!(
@@ -75,7 +72,13 @@ async fn main() -> Result<(), ExitError> {
         config.listen_socket.addr, config.listen_socket.port
     ))
     .await
-    .unwrap();
+    .inspect_err(|err| {
+        error!(
+            "TCP fatal error while attempting to bind to {}:{}: {err}",
+            config.listen_socket.addr, config.listen_socket.port
+        )
+    })
+    .map_err(|_| ExitError::default())?;
 
     // TODO: This doesn't log at info/debug/trace level what it is doing
     // unless it fails. We also can't log ourselves if we think privileges
@@ -84,7 +87,13 @@ async fn main() -> Result<(), ExitError> {
     process.drop_privileges()?;
 
     loop {
-        let (stream, peer_addr) = listener.accept().await.unwrap();
+        let Ok((stream, peer_addr)) = listener
+            .accept()
+            .await
+            .inspect_err(|err| error!("Error while accepting TCP connection: {err}"))
+        else {
+            continue;
+        };
         let acceptor = acceptor.clone();
         let config = config.clone();
         let pkcs11_pools = pkcs11_pools.clone();
@@ -112,6 +121,25 @@ async fn main() -> Result<(), ExitError> {
                 }
             }
         });
+    }
+}
+
+fn improve_pkcs11_finalize_err(config: &Config, err: pkcs11::error::Error) -> pkcs11::error::Error {
+    {
+        if matches!(
+            err,
+            Error::HsmFailure(CryptokiError::Pkcs11(
+                RvError::ArgumentsBad,
+                Function::Initialize
+            ))
+        ) {
+            Error::UnusableConfig(format!(
+                "PKCS#11 function C_Initialize() failed. Please consult the documentation for the PKCS#11 library at '{}'. Possible causes include insufficient access rights (e.g. to read a PKCS#11 vendor specific configuration file) or missing PKCS#11 vendor specific environment variables.",
+                config.lib_path.display()
+            ))
+        } else {
+            err
+        }
     }
 }
 

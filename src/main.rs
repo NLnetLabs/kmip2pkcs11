@@ -44,8 +44,7 @@ async fn main() -> Result<(), ExitError> {
     )
     .get_matches();
     let (mut config, args) = Config::from_arg_matches(&matches)?;
-    Logger::from_config(&config.log)?.switch_logging(false)?;
-
+    Logger::from_config(&config.log)?.switch_logging(args.detach)?;
     let mut process = Process::from_config(args.process.into_config());
     process.setup_daemon(args.detach)?;
 

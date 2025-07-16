@@ -12,30 +12,23 @@ use cryptoki::error::Error as CryptokiError;
 use cryptoki::error::RvError;
 use daemonbase::error::ExitError;
 use daemonbase::logging::Logger;
+use daemonbase::process::Process;
 use log::{error, info, warn};
 use rcgen::{CertifiedKey, generate_simple_self_signed};
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
-// use tracing_subscriber::EnvFilter;
-// use tracing_subscriber::fmt::format::FmtSpan;
 
 use crate::client_request_handler::handle_client_requests;
 use crate::config::ServerIdentity;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::util::{Pkcs11Pools, init_pkcs11};
-use daemonbase::process::Process;
 
 #[tokio::main]
 async fn main() -> Result<(), ExitError> {
-    // tracing_subscriber::fmt()
-    //     .with_env_filter(EnvFilter::from_default_env())
-    //     .with_thread_ids(true)
-    //     .with_span_events(FmtSpan::ENTER)
-    //     .try_init()
-    //     .ok();
     Logger::init_logging()?;
+
     let matches = Config::config_args(
         Command::new("nameshed-hsm-relay")
             .version(crate_version!())

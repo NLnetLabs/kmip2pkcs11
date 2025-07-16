@@ -885,7 +885,6 @@ dependencies = [
  "tokio",
  "tokio-rustls 0.26.2",
  "toml",
- "tracing-subscriber",
 ]
 
 [[package]]

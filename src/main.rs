@@ -40,7 +40,7 @@ async fn main() -> Result<(), ExitError> {
         Command::new("nameshed-hsm-relay")
             .version(crate_version!())
             .author(crate_authors!())
-            .about("Nameshed-HSM-Relay"),
+            .about("Nameshed HSM Relay"),
     )
     .get_matches();
     let (mut config, args) = Config::from_arg_matches(&matches)?;

@@ -8,17 +8,18 @@ use serde::Deserialize;
 
 #[derive(clap::Parser)]
 pub struct Args {
+    /// The config file to use.
     #[arg(short, long)]
     pub config: ConfigPath,
-
-    #[command(flatten)]
-    pub log: logging::Args,
 
     /// Detach from the terminal
     #[arg(short, long)]
     pub detach: bool,
 
-    #[command(flatten)]
+    #[command(next_help_heading = "Logging options", flatten)]
+    pub log: logging::Args,
+
+    #[command(next_help_heading = "Process options", flatten)]
     pub process: process::Args,
 }
 

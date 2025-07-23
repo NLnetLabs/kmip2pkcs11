@@ -8,7 +8,7 @@ use kmip::types::common::{
     CryptographicAlgorithm, KeyFormatType, KeyMaterial, TransparentRSAPublicKey, UniqueIdentifier,
 };
 use kmip::types::response::{KeyBlock, KeyValue};
-use log::{info, trace};
+use log::{debug, info, trace};
 
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::Pkcs11Connection;
@@ -52,7 +52,7 @@ fn get_public_key_details(
     let mut public_exponent: Option<Vec<u8>> = None;
     let mut ec_point: Option<Vec<u8>> = None;
 
-    let request_attrs = vec![
+    let mut request_attrs = vec![
         AttributeType::Class,
         AttributeType::Modulus,
         AttributeType::ModulusBits,    // For RSA keys
@@ -62,13 +62,28 @@ fn get_public_key_details(
         AttributeType::KeyGenMechanism,
     ];
 
-    let attrs = pkcs11conn
-        .session()
-        .get_attributes(key_handle, &request_attrs)?;
+    let attrs = loop {
+        let res = pkcs11conn
+            .session()
+            .get_attributes(key_handle, &request_attrs);
 
-    if attrs.is_empty() {
-        return Err(Error::not_found("Key", "ObjectHandle", key_handle));
-    }
+        if matches!(res, Err(cryptoki::error::Error::NotSupported)) {
+            // Retry without KeyGenMechanism attribute, as at least the
+            // Nitrokey NetHSM doesn't support it and we can also get the
+            // information we need from the KeyType attribute.
+            debug!("C_GetAttributeValue failed, re-trying without CKA_KEY_GEN_MECHANISM");
+            let _ = request_attrs.pop();
+            continue;
+        }
+
+        let attrs = res?;
+
+        if attrs.is_empty() {
+            return Err(Error::not_found("Key", "ObjectHandle", key_handle));
+        } else {
+            break attrs;
+        }
+    };
 
     // https://docs.oasis-open.org/kmip/ug/v1.2/cn01/kmip-ug-v1.2-cn01.html#_Toc407027125
     //   "“Raw” key format is intended to be applied to symmetric keys and not

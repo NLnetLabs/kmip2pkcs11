@@ -32,8 +32,7 @@ impl From<pkcs11::error::Error> for ExitError {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), ExitError> {
+fn main() -> Result<(), ExitError> {
     Logger::init_logging()?;
 
     let matches = Config::config_args(
@@ -46,6 +45,9 @@ async fn main() -> Result<(), ExitError> {
     let (mut config, args) = Config::from_arg_matches(&matches)?;
     Logger::from_config(&config.log)?.switch_logging(args.detach)?;
     let mut process = Process::from_config(args.process.into_config());
+
+    // Note: This may fork. Don't create the Tokio runtime before calling this.
+    // See: https://github.com/tokio-rs/tokio/issues/4301
     process.setup_daemon(args.detach)?;
 
     // TODO: Drop privileges before or after initializing the PKCS#11 library?
@@ -67,39 +69,49 @@ async fn main() -> Result<(), ExitError> {
         .map_err(|_| ExitError::default())?;
     let acceptor = TlsAcceptor::from(Arc::new(rustls_config));
 
-    let listener = TcpListener::bind(format!(
-        "{}:{}",
-        config.listen_socket.addr, config.listen_socket.port
-    ))
-    .await
-    .inspect_err(|err| {
-        error!(
-            "TCP fatal error while attempting to bind to {}:{}: {err}",
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .thread_name("nameshed-worker")
+        .build()
+        .unwrap();
+
+    runtime.block_on(async move {
+        info!(
+            "Listening on {}:{}",
             config.listen_socket.addr, config.listen_socket.port
-        )
-    })
-    .map_err(|_| ExitError::default())?;
+        );
+        let listener = TcpListener::bind(format!(
+            "{}:{}",
+            config.listen_socket.addr, config.listen_socket.port
+        ))
+        .await
+        .inspect_err(|err| {
+            error!(
+                "TCP fatal error while attempting to bind to {}:{}: {err}",
+                config.listen_socket.addr, config.listen_socket.port
+            )
+        })
+        .map_err(|_| ExitError::default())?;
 
-    // TODO: This doesn't log at info/debug/trace level what it is doing
-    // unless it fails. We also can't log ourselves if we think privileges
-    // will be dropped because the args.process member fields are not visible
-    // to us.
-    process.drop_privileges()?;
+        // TODO: This doesn't log at info/debug/trace level what it is doing
+        // unless it fails. We also can't log ourselves if we think privileges
+        // will be dropped because the args.process member fields are not visible
+        // to us.
+        process.drop_privileges()?;
 
-    loop {
-        let Ok((stream, peer_addr)) = listener
-            .accept()
-            .await
-            .inspect_err(|err| error!("Error while accepting TCP connection: {err}"))
-        else {
-            continue;
-        };
-        let acceptor = acceptor.clone();
-        let config = config.clone();
-        let pkcs11_pools = pkcs11_pools.clone();
+        loop {
+            let Ok((stream, peer_addr)) = listener
+                .accept()
+                .await
+                .inspect_err(|err| error!("Error while accepting TCP connection: {err}"))
+            else {
+                continue;
+            };
+            let acceptor = acceptor.clone();
+            let config = config.clone();
+            let pkcs11_pools = pkcs11_pools.clone();
 
-        info!("Waiting for connections...");
-        tokio::spawn(async move {
+            info!("Waiting for connections...");
             match acceptor.accept(stream).await {
                 Ok(stream) => {
                     info!("Accepting connection from {peer_addr}");
@@ -120,8 +132,8 @@ async fn main() -> Result<(), ExitError> {
                     error!("Error accepting connection: {err}");
                 }
             }
-        });
-    }
+        }
+    })
 }
 
 fn improve_pkcs11_finalize_err(config: &Config, err: pkcs11::error::Error) -> pkcs11::error::Error {

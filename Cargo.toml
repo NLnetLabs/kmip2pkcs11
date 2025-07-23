@@ -12,7 +12,7 @@ readme = "README.md"
 [dependencies]
 bcder = "0.7.5"
 clap = { version = "4.5", features = ["cargo", "derive"] }
-cryptoki = "^0.10"
+cryptoki = "^0.10.0"
 domain = { git = "https://github.com/NLnetLabs/domain.git", branch = "patches-for-nameshed-prototype", features = [
     "unstable-crypto-sign",
 ] }

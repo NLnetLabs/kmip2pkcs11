@@ -144,8 +144,8 @@ pub fn op(
 
     if matches!(mechanism, Mechanism::RsaPkcsKeyPairGen) {
         if let Some(modulus) = modulus {
-             pub_attrs.push(Attribute::ModulusBits(
-                 (modulus as usize).try_into().unwrap(),
+            pub_attrs.push(Attribute::ModulusBits(
+                (modulus as usize).try_into().unwrap(),
             ));
         }
     }

@@ -4,7 +4,7 @@ use std::io::ErrorKind;
 
 use cryptoki::object::ObjectHandle;
 use cryptoki::types::AuthPin;
-use daemonbase::error::ExitError;
+use daemonbase::error::{ExitError, Failed};
 use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::{BatchItem, ResultReason};
@@ -27,8 +27,8 @@ pub type HandleCache = Cache<String, ObjectHandle>;
 pub async fn handle_client_requests(
     mut stream: TlsStream<TcpStream>,
     peer_addr: SocketAddr,
-    config: Config,
-    pkcs11_pools: Pkcs11Pools,
+    mut config: Config,
+    mut pkcs11_pools: Pkcs11Pools,
 ) -> Result<(), ExitError> {
     let reader_config = kmip::Config::new();
     let tag_map = kmip::tag_map::make_kmip_tag_map();
@@ -75,12 +75,17 @@ pub async fn handle_client_requests(
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
                 }
 
-                res_batch_items.append(&mut process_request(
-                    &config,
-                    &pkcs11_pools,
-                    peer_addr,
-                    req,
-                )?);
+                let (res, c, p) = tokio::task::spawn_blocking(move || {
+                    let r = process_request(&config, &pkcs11_pools, peer_addr, req);
+                    (r, config, pkcs11_pools)
+                })
+                .await
+                .map_err(|_| ExitError::from(Failed))?;
+
+                config = c;
+                pkcs11_pools = p;
+
+                res_batch_items.append(&mut res?);
             }
 
             Err((err, _cap)) if is_disconnection_err(&err) => {

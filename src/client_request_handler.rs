@@ -9,7 +9,7 @@ use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::{BatchItem, ResultReason};
 use kmip_ttlv::PrettyPrinter;
-use log::{debug, error, log_enabled, warn};
+use log::{debug, error, info, log_enabled, warn};
 use moka::sync::Cache;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
@@ -163,6 +163,12 @@ fn process_request(
     };
 
     let mut res_batch_items = vec![];
+
+    let tid = std::thread::current();
+    info!(
+        "Processing batch of {} items from peer {peer_addr} on thread {tid:?}",
+        req.batch_items().len()
+    );
 
     for batch_item in req.batch_items() {
         debug!(

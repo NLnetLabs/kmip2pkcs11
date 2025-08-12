@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "domain"
 version = "0.11.1-dev"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#48b9b6b1f0b4278fb92c9b6f840bdba10eab134a"
+source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#01aa449eae5fb33ed1e9241718870811e038c8c2"
 dependencies = [
  "bumpalo",
  "bytes",
@@ -420,7 +420,7 @@ dependencies = [
 [[package]]
 name = "domain-macros"
 version = "0.11.1-dev"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#48b9b6b1f0b4278fb92c9b6f840bdba10eab134a"
+source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#01aa449eae5fb33ed1e9241718870811e038c8c2"
 dependencies = [
  "proc-macro2",
  "quote",

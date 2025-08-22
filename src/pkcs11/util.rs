@@ -154,8 +154,8 @@ pub fn pkcs11_cka_id_to_kmip_unique_identifier(cka_id: &[u8], private: bool) -> 
     })
 }
 
-pub fn kmip_unique_identifier_to_pkcs11_cka_id(id: &UniqueIdentifier, private: bool) -> Vec<u8> {
-    let id_len = match private {
+pub fn kmip_unique_identifier_to_pkcs11_cka_id(id: &UniqueIdentifier) -> Vec<u8> {
+    let id_len = match id.ends_with("_priv") {
         true => id.len() - 5,  // subtract _priv
         false => id.len() - 4, // subtract _pub
     };
@@ -170,13 +170,12 @@ pub fn kmip_unique_identifier_to_pkcs11_cka_id(id: &UniqueIdentifier, private: b
 pub fn get_cached_handle_for_key(
     pkcs11conn: &Pkcs11Connection,
     id: &UniqueIdentifier,
-    private: bool,
 ) -> Option<ObjectHandle> {
     pkcs11conn
         .handle_cache()
         .optionally_get_with_by_ref(&id.0, || {
-            let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id, private);
-            let object_class = match private {
+            let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id);
+            let object_class = match id.ends_with("_priv") {
                 true => ObjectClass::PRIVATE_KEY,
                 false => ObjectClass::PUBLIC_KEY,
             };
@@ -219,13 +218,13 @@ mod tests {
         let cka_id = generate_cka_id();
         let kmip_id = pkcs11_cka_id_to_kmip_unique_identifier(&cka_id, false);
         assert!(kmip_id.ends_with("_pub"));
-        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id, false);
+        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id);
         assert_eq!(cka_id.as_slice(), round_trip_cka_id.as_slice());
 
         let cka_id = generate_cka_id();
         let kmip_id = pkcs11_cka_id_to_kmip_unique_identifier(&cka_id, true);
         assert!(kmip_id.ends_with("_priv"));
-        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id, true);
+        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id);
         assert_eq!(cka_id.as_slice(), round_trip_cka_id.as_slice());
     }
 
@@ -234,13 +233,13 @@ mod tests {
         let cka_id = generate_cka_id();
         let kmip_id = pkcs11_cka_id_to_kmip_unique_identifier(&cka_id, false);
         assert!(kmip_id.ends_with("_pub"));
-        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id, false);
+        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id);
         assert_eq!(cka_id.as_slice(), round_trip_cka_id.as_slice());
 
         let cka_id = generate_cka_id();
         let kmip_id = pkcs11_cka_id_to_kmip_unique_identifier(&cka_id, true);
         assert!(kmip_id.ends_with("_priv"));
-        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id, true);
+        let round_trip_cka_id = kmip_unique_identifier_to_pkcs11_cka_id(&kmip_id);
         assert_eq!(cka_id.as_slice(), round_trip_cka_id.as_slice());
     }
 }

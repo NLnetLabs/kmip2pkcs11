@@ -28,7 +28,7 @@ pub fn get_public_key(
     pkcs11conn: Pkcs11Connection,
     id: &UniqueIdentifier,
 ) -> Result<Option<KeyBlock>, Error> {
-    let key_handle = get_cached_handle_for_key(&pkcs11conn, id, false);
+    let key_handle = get_cached_handle_for_key(&pkcs11conn, id);
 
     if let Some(key_handle) = key_handle {
         info!(

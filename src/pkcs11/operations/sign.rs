@@ -20,7 +20,7 @@ pub fn sign(
     data: &Data,
 ) -> Result<Vec<u8>, Error> {
     // Only private keys can be used for signing.
-    let Some(key_handle) = get_cached_handle_for_key(&pkcs11conn, id, true) else {
+    let Some(key_handle) = get_cached_handle_for_key(&pkcs11conn, id) else {
         return Err(Error::not_found("Key", "Id", id.0.clone()));
     };
 

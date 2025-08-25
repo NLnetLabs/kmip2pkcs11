@@ -152,6 +152,9 @@ pub fn op(
 
     // TODO: Detect sign mask in the above and push it as an attr.
 
+    // TODO: Verify that no other key already has this name. Return Illegal
+    // Operation error if so, per https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613601
+
     let CreatedKeyPair {
         public_key_id,
         private_key_id,

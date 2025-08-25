@@ -29,7 +29,7 @@ pub fn op(
 
     if attr.0.0 != "Name" {
         return Err((
-            ResultReason::OperationNotSupported,
+            ResultReason::PermissionDenied,
             format!("Modification of attribute '{}' is not supported", attr.0.0),
         ));
     }
@@ -59,6 +59,9 @@ pub fn op(
             format!("Key with id {} not found", id.0),
         ));
     };
+
+    // TODO: Verify that no other key already has this name. Return Illegal
+    // Operation error if so, per https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613614
 
     let pkcs11_attr = Attribute::Label(val.0.as_bytes().to_vec());
     pkcs11conn

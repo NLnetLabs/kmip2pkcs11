@@ -4,7 +4,7 @@ Documentation=man:nameshed-hsm-relay(1)
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/nameshed-hsm-relay --config=/etc/nameshed-hsm-relay.conf --syslog server
+ExecStart=/usr/bin/nameshed-hsm-relay --config=/etc/nameshed-hsm-relay.conf --syslog
 Type=exec
 Restart=on-failure
 User=nameshed-hsm-relay

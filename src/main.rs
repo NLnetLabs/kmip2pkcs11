@@ -76,22 +76,49 @@ fn main() -> Result<(), ExitError> {
         .unwrap();
 
     runtime.block_on(async move {
-        info!(
-            "Listening on {}:{}",
-            config.listen_socket.addr, config.listen_socket.port
-        );
-        let listener = TcpListener::bind(format!(
-            "{}:{}",
-            config.listen_socket.addr, config.listen_socket.port
-        ))
-        .await
-        .inspect_err(|err| {
-            error!(
-                "TCP fatal error while attempting to bind to {}:{}: {err}",
-                config.listen_socket.addr, config.listen_socket.port
-            )
-        })
-        .map_err(|_| ExitError::default())?;
+        // Use the socket supplied by SystemD in preference to the config file
+        // defined address and port.
+        let listener =
+            if let Ok(Some(std_listener)) = listenfd::ListenFd::from_env().take_tcp_listener(0) {
+                info!(
+                    "Listening on SystemD supplied socket at {}",
+                    std_listener
+                        .local_addr()
+                        .map(|addr| addr.to_string())
+                        .unwrap_or("unknown".into())
+                );
+                // As required by Tokio set the listener into non-blocking mode.
+                // See: https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html#notes
+                std_listener.set_nonblocking(true)
+                    .inspect_err(|err| {
+                        error!("Unable to set listener received from SystemD into non-blocking mode: {err}")
+                    })
+                    .map_err(|_| ExitError::default())?;
+                let tokio_listener = TcpListener::from_std(std_listener)
+                    .inspect_err(|err| {
+                        error!("Unable to convert listener received from SystemD into a Tokio TcpListener: {err}")
+                    })
+                    .map_err(|_| ExitError::default())?;
+                tokio_listener
+            } else {
+                info!(
+                    "Listening on {}:{}",
+                    config.listen_socket.addr, config.listen_socket.port
+                );
+                let listener = TcpListener::bind(format!(
+                    "{}:{}",
+                    config.listen_socket.addr, config.listen_socket.port
+                ))
+                .await
+                .inspect_err(|err| {
+                    error!(
+                        "TCP fatal error while attempting to bind to {}:{}: {err}",
+                        config.listen_socket.addr, config.listen_socket.port
+                    )
+                })
+                .map_err(|_| ExitError::default())?;
+                listener
+            };
 
         // TODO: This doesn't log at info/debug/trace level what it is doing
         // unless it fails. We also can't log ourselves if we think privileges

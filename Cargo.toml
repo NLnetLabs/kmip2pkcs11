@@ -29,15 +29,15 @@ kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", pa
 log = "0.4"
 moka = { version = "0.12.10", features = ["sync"] }
 r2d2 = "0.8.10"
-rand = "0.9.1"
-rcgen = { version = "0.14.2", optional = true }
+rand = "0.9.2"
+rcgen = { version = "0.14.3", optional = true }
 rpki = { version = "0.18", features = ["crypto"] }
-tokio = { version = "1.46.1", features = ["macros", "net", "rt-multi-thread"] }
-rustls = "0.23.29"
+tokio = { version = "1.47.1", features = ["macros", "net", "rt-multi-thread"] }
+rustls = "0.23.31"
 tokio-rustls = "0.26.2"
 daemonbase = { git = "https://github.com/NLnetLabs/daemonbase", branch = "fix-missing-setgroups", version = "0.1.4-dev" }
 serde = { version = "1.0.219", features = ["derive"] }
-toml = "0.9.2"
+toml = "0.9.5"
 listenfd = "1.0.2"
 
 [features]

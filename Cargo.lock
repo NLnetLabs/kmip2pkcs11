@@ -378,8 +378,8 @@ dependencies = [
 
 [[package]]
 name = "daemonbase"
-version = "0.1.4-dev"
-source = "git+https://github.com/NLnetLabs/daemonbase?branch=fix-missing-setgroups#f1a2e7904a8c930f978b88c3b0f6b44ca0e27ecb"
+version = "0.1.3"
+source = "git+https://github.com/NLnetLabs/daemonbase?branch=rework-set-user#0bf3758166275abf49d7896e58a2632b5c3d14ed"
 dependencies = [
  "chrono",
  "clap",

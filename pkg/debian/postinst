@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-USER_ID="routinator"
+USER_ID="kmip2pkcs11"
 
 create_user() {
     if id ${USER_ID} > /dev/null 2>&1; then return; fi

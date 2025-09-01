@@ -5,9 +5,8 @@ set -x
 
 case $1 in
   post-install)
-    #echo -e "\nKMIP2PKCS#11 VERSION:"
-    #VER=$(routinator --version)
-    #echo $VER
+    echo -e "\nKMIP2PKCS#11 VERSION:"
+    kmip2pkcs11 --version
 
     echo -e "\nKMIP2PKCS#11 CONF:"
     cat /etc/kmip2pkcs11.conf
@@ -20,8 +19,8 @@ case $1 in
     ;;
 
   post-upgrade)
-    #echo -e "\nKMIP2PKCS#11 VERSION:"
-    #kmip2pkcs11 --version
+    echo -e "\nKMIP2PKCS#11 VERSION:"
+    kmip2pkcs11 --version
     
     echo -e "\nKMIP2PKCS#11 CONF:"
     cat /etc/kmip2pkcs11.conf

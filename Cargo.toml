@@ -76,7 +76,7 @@ maintainer = "NLnet Labs <rust-team@nlnetlabs.nl>"
 license-file = ["LICENSE", "0"]
 extended-description = """\
 A relay for connecting OASIS KMIP compatible HSM clients to PKCS#11 compatible HSMs."""
-depends = "$auto, passwd"
+depends = "$auto, adduser"
 section = "net"
 priority = "optional"
 maintainer-scripts = "pkg/debian"

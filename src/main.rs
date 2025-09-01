@@ -71,7 +71,7 @@ fn main() -> Result<(), ExitError> {
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
-        .thread_name("nameshed-worker")
+        .thread_name("kmip2pkcs11-worker")
         .build()
         .unwrap();
 

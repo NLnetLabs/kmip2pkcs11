@@ -36,10 +36,10 @@ fn main() -> Result<(), ExitError> {
     Logger::init_logging()?;
 
     let matches = Config::config_args(
-        Command::new("nameshed-hsm-relay")
+        Command::new("kmip2pkcs11")
             .version(crate_version!())
             .author(crate_authors!())
-            .about("Nameshed HSM Relay"),
+            .about("A KMIP to PKCS#11 relay"),
     )
     .get_matches();
     let (mut config, args) = Config::from_arg_matches(&matches)?;
@@ -71,7 +71,7 @@ fn main() -> Result<(), ExitError> {
 
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
-        .thread_name("nameshed-worker")
+        .thread_name("kmip2pkcs11-worker")
         .build()
         .unwrap();
 

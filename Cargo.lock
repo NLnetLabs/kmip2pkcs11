@@ -719,6 +719,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "kmip2pkcs11"
+version = "0.1.0"
+dependencies = [
+ "bcder",
+ "clap",
+ "cryptoki",
+ "daemonbase",
+ "domain",
+ "hex",
+ "kmip-protocol",
+ "kmip-ttlv",
+ "log",
+ "moka",
+ "r2d2",
+ "rand 0.9.1",
+ "rcgen",
+ "rpki",
+ "rustls 0.23.29",
+ "serde",
+ "tokio",
+ "tokio-rustls 0.26.2",
+ "toml",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -850,31 +875,6 @@ dependencies = [
  "tagptr",
  "thiserror",
  "uuid",
-]
-
-[[package]]
-name = "nameshed-hsm-relay"
-version = "0.1.0"
-dependencies = [
- "bcder",
- "clap",
- "cryptoki",
- "daemonbase",
- "domain",
- "hex",
- "kmip-protocol",
- "kmip-ttlv",
- "log",
- "moka",
- "r2d2",
- "rand 0.9.1",
- "rcgen",
- "rpki",
- "rustls 0.23.29",
- "serde",
- "tokio",
- "tokio-rustls 0.26.2",
- "toml",
 ]
 
 [[package]]

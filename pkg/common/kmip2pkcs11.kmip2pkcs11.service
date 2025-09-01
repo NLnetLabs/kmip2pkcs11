@@ -4,7 +4,7 @@ Documentation=man:kmip2pkcs11(1)
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/kmip2pkcs11 --config=/etc/kmip2pkcs11/kmip2pkcs11.conf --syslog
+ExecStart=/usr/bin/kmip2pkcs11 --config=/etc/kmip2pkcs11/config.toml --syslog
 Type=exec
 Restart=on-failure
 User=kmip2pkcs11

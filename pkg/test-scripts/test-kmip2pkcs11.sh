@@ -9,7 +9,7 @@ case $1 in
     kmip2pkcs11 --version
 
     echo -e "\nKMIP2PKCS#11 CONF:"
-    cat /etc/kmip2pkcs11/kmip2pkcs11.conf
+    cat /etc/kmip2pkcs11/config.toml
 
     echo -e "\nKMIP2PKCS#11 SERVICE STATUS:"
     systemctl status kmip2pkcs11 || true
@@ -23,7 +23,7 @@ case $1 in
     kmip2pkcs11 --version
     
     echo -e "\nKMIP2PKCS#11 CONF:"
-    cat /etc/kmip2pkcs11/kmip2pkcs11.conf
+    cat /etc/kmip2pkcs11/config.toml
     
     echo -e "\nKMIP2PKCS#11 SERVICE STATUS:"
     systemctl status kmip2pkcs11 || true

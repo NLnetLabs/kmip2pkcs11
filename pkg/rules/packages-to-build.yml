@@ -2,7 +2,7 @@
 # workflow inputs.
 ---
 pkg:
-  - 'nameshed-hsm-relay'
+  - 'kmip2pkcs11'
 image:
   - "debian:trixie" # debian/13
   - 'almalinux:10'
@@ -18,7 +18,7 @@ test-image:
   - ""
 include:
   - image: 'almalinux:10'
-    systemd_service_unit_file: pkg/common/nameshed-hsm-relay.nameshed-hsm-relay.service
+    systemd_service_unit_file: pkg/common/kmip2pkcs11.kmip2pkcs11.service
 
 # 'mode' is not used by the package building workflow job, but is used by the package testing workflow job.
 # Ploutos will not include this key when using this matrix definition to generate package building matrix
@@ -30,6 +30,6 @@ test-mode:
 # # Disable upgrade testing on Ubuntu Noble as we haven't published any packages for
 # # those O/S versions yet.
 # test-exclude:
-#   - pkg: 'nameshed-hsm-relay'
+#   - pkg: 'kmi2pkcs11'
 #     image: 'ubuntu:noble'
 #     mode: 'upgrade-from-published'

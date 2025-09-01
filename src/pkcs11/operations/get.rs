@@ -97,7 +97,7 @@ fn get_public_key_details(
     // public exponent and trims leading zeros from their bytes by shifting
     // the bytes left and truncating the length. It does this to conform to
     // https://datatracker.ietf.org/doc/html/rfc3110#section-2. The
-    // application implementing RFC 3110, i.e. Nameshed, should do that, not
+    // application implementing RFC 3110, i.e. Cascade, should do that, not
     // us.
     trace!("Returned PKCS#11 attributes: {attrs:?}");
 

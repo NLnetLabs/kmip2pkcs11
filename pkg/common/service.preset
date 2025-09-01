@@ -1,1 +1,1 @@
-disable nameshed-hsm-relay.service
+disable kmip2pkcs11.service

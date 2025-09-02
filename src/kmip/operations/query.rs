@@ -53,8 +53,7 @@ pub fn op(
                         "Internal error: PKCS#11 info not available".to_string(),
                     ));
                 };
-                vendor_identification =
-                    Some(format!("Nameshed-HSM-Relay {self_ver} using {pkcs11_info}"));
+                vendor_identification = Some(format!("kmip2pkcs11 {self_ver} using {pkcs11_info}"));
                 server_information = Some(ServerInformation);
             }
             _ => { /* Ignore */ }

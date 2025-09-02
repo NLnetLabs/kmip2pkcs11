@@ -1,0 +1,33 @@
+[Unit]
+Description=A KMIP to PKCS#11 relay.
+Documentation=man:kmip2pkcs11(1)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/kmip2pkcs11 --config=/etc/kmip2pkcs11/config.toml --syslog
+Type=exec
+Restart=on-failure
+User=kmip2pkcs11
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectControlGroups=yes
+ProtectHome=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+StateDirectory=kmip2pkcs11
+SystemCallArchitectures=native
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target
+

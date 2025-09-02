@@ -2,8 +2,7 @@
 # ============================================================================
 
 # The PKCS#11 module to use to communicate with an HSM.
-# Uncomment this setting and specify the correct path to the PKCS#11 module
-# to use.
+# TODO: Set this to the actual path to the PKCS#11 module to use.
 lib_path = "/path/to/your/pkcs11.so"
 
 # The target for logging (stderr, syslog or file).

@@ -53,7 +53,7 @@ assets = [
   ["README.md", "usr/share/doc/kmip2pkcs11/", "644"],
   #["doc/kmip2pkcs11.1", "usr/share/man/man1/kmip2pkcs11.1", "644"],
   ["etc/config.toml.system-service", "etc/kmip2pkcs11/config.toml", "644"],
-  ["pkg/common/service.preset", "/usr/lib/systemd/service-preset/50-kmip2pkcs11.preset", "644"],
+  ["pkg/common/service.preset", "usr/lib/systemd/service-preset/50-kmip2pkcs11.preset", "644"],
 ]
 name = "kmip2pkcs11"
 maintainer = "NLnet Labs <rust-team@nlnetlabs.nl>"

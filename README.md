@@ -50,8 +50,12 @@ The following KMIP operations are supported by this application at present:
 | -------------- | ----------------- | ----------- |
 | [Activate](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613546)         | N/A | Returns with success as PKCS#11 has no notion of object activation. |
 | [Create Key Pair](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613529) | [C_GenerateKeyPair](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html#_Toc235002392) | Only supports RSA and ECDSA at present. |
+| [Discover Versions] | N/A | |
 | [Get](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613538) | [C_FindObjectsInit](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002352), [C_FindObjects](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002353), [C_FindObjectsFinal](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002354) & [C_GetAttributeValue](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002350) | |
+| [Modify Attribute](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613542) | [C_SetAttributeValue] | |
+| [Query](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613552) | [C_GetSlotInfo], [C_GetTokenInfo] | |
 | [Sign](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613558) | [C_FindObjectsInit](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002352), [C_FindObjects](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002353), [C_FindObjectsFinal](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002354), [C_SignInit](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002372), [C_Sign](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc235002373) & [C_SignFinal](https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc2350023753) | |
+| N/A | [C_GetFunctionList], [C_GetInfo], [C_Initialize] | |
 
 # Usage
 

@@ -4,7 +4,15 @@
 pkg:
   - 'kmip2pkcs11'
 image:
-  - "debian:trixie" # debian/13
+  - "ubuntu:focal"    # ubuntu/20.04
+  - "ubuntu:jammy"    # ubuntu/22.04
+  - "ubuntu:noble"    # ubuntu/24.04
+  - "debian:buster"   # debian/10
+  - "debian:bullseye" # debian/11
+  - "debian:bookworm" # debian/12
+  - "debian:trixie"   # debian/13
+  - 'almalinux:8'     # compatible with EOL centos:8
+  - 'almalinux:9'
   - 'almalinux:10'
 target:
   - 'x86_64'
@@ -17,6 +25,12 @@ test-image:
   # in the original matrix. This is just how GitHub Actions matrix include rules work.
   - ""
 include:
+  - image: 'almalinux:8'
+    systemd_service_unit_file: pkg/common/kmip2pkcs11.kmip2pkcs11.service
+  
+  - image: 'almalinux:9'
+    systemd_service_unit_file: pkg/common/kmip2pkcs11.kmip2pkcs11.service
+
   - image: 'almalinux:10'
     systemd_service_unit_file: pkg/common/kmip2pkcs11.kmip2pkcs11.service
 
@@ -33,3 +47,5 @@ test-mode:
 #   - pkg: 'kmi2pkcs11'
 #     image: 'ubuntu:noble'
 #     mode: 'upgrade-from-published'
+
+

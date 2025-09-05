@@ -23,7 +23,7 @@ log_target = "stderr"
 # log_facility = "daemon"
 
 # When logging to file, the path to write to.
-# log_file = "/var/log/nsd-hsm-relay.log"
+# log_file = "/var/log/kmip2pksc11.log"
 
 # The minimum log level to output (error, warn, info, debug, or trace).
 log_level = "info"

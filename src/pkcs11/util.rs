@@ -202,7 +202,7 @@ pub fn get_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Config) -> Result<String, 
     let slot_info = pkcs11.get_slot_info(slot)?;
     let lib_name = cfg.lib_path.file_name().unwrap();
     Ok(format!(
-        "Using PKCS#11 token with label {} in slot {} via library {}",
+        "PKCS#11 token with label {} in slot {} via library {}",
         token_info.label(),
         slot_info.slot_description(),
         lib_name.display()

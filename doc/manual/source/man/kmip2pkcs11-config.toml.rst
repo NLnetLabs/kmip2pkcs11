@@ -1,7 +1,7 @@
 Configuration File Format
 =========================
 
-kmip2pkcs11 uses the TOML format for its configuration file. The provided
+:program:`kmip2pkcs11` uses the TOML format for its configuration file. The provided
 values to the options below are the default values and are serving as a hint to
 the option's format.
 

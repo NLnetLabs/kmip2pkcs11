@@ -29,7 +29,7 @@ format and executes them against a loaded PKCS#11 library.
 Installing or building
 ----------------------
 
-As the KMIP to PKCS#11 relay (kmip2pkcs11) is currently only intended for use
+As the KMIP to PKCS#11 relay (:program:`kmip2pkcs11`) is currently only intended for use
 with `Cascade <https://cascade.docs.nlnetlabs.nl>`_, please refer to the
 installation or building instructions of Cascade `here
 <https://cascade.docs.nlnetlabs.nl/en/latest/installation.html>`_.

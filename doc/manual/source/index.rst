@@ -127,15 +127,6 @@ For the command line options, see :doc:`man/kmip2pkcs11`
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Getting Started
-   :name: toc-getting-started
-
-   installation
-   building
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
    :caption: Manual Pages
    :name: toc-manual-pages
 

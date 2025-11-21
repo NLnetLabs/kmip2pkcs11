@@ -75,18 +75,22 @@ pub fn get_slot(pkcs11: &Pkcs11, slot_str: &str) -> Result<Slot, Error> {
     fn has_token_label(pkcs11: &Pkcs11, slot: Slot, slot_label: &str) -> bool {
         pkcs11
             .get_token_info(slot)
+            .inspect(|i| log::debug!("saw info {i:?}, label {:?}", i.label()))
             .map(|info| info.label().trim_end() == slot_label)
             .unwrap_or(false)
     }
 
     // First try finding a slot with a matching token label.
+    log::debug!("looking for slots with matching labels");
     if let Some(slot) = pkcs11
         .get_slots_with_initialized_token()?
         .into_iter()
         .find(|&slot| has_token_label(pkcs11, slot, slot_str))
     {
+        log::debug!("found a matching slot!");
         return Ok(slot);
     }
+    log::debug!("couldn't find a matching slot");
 
     // Next try finding a slot with a matching id
     if let Ok(slot_id) = slot_str.parse::<u64>() {

@@ -1,17 +1,16 @@
 use core::net::SocketAddr;
 
-use std::io::ErrorKind;
-
 use cryptoki::object::ObjectHandle;
 use cryptoki::types::AuthPin;
 use daemonbase::error::{ExitError, Failed};
+use kmip::ttlv::FastScanner;
 use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::{BatchItem, ResultReason};
 use kmip_ttlv::PrettyPrinter;
 use kmip2pkcs11_cfg::v1::Config;
 use moka::sync::Cache;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
 use tracing::{Level, debug, enabled, error, info, warn};
@@ -30,7 +29,6 @@ pub async fn handle_client_requests(
     mut config: Config,
     mut pkcs11_pools: Pkcs11Pools,
 ) -> Result<(), ExitError> {
-    let reader_config = kmip::Config::new();
     let tag_map = kmip::tag_map::make_kmip_tag_map();
     let enum_map = kmip::tag_map::make_kmip_enum_map();
     let pp = PrettyPrinter::new()
@@ -38,21 +36,64 @@ pub async fn handle_client_requests(
         .with_tag_map(tag_map)
         .with_enum_map(enum_map);
 
+    // A buffer accumulating data read thus far.
+    //
+    // TODO: Use a more efficient buffer type, that can avoid shifting the data
+    // every time a request message is consumed.
+    let mut buffer = Vec::with_capacity(8192);
+
     loop {
-        if let Err(err) = stream.get_ref().0.readable().await {
-            // Don't warn about client disconnection.
-            // TODO: Categorize the various std::io::ErrorKinds into fatal and
-            // non-fatal variants and only abort on fatal errors.
-            if err.kind() != ErrorKind::UnexpectedEof {
-                warn!("Closing connection with client {peer_addr} due to error: {err}");
+        // Try parsing a request message from buffered data.
+        let (request, request_bytes) = loop {
+            // Try reading from the buffer.
+            let available = buffer.len() - buffer.len() % 8;
+            let mut scanner = FastScanner::new(&buffer[..available])
+                .expect("the provided buffer has a multiple of 8 bytes");
+            if scanner.have_next() {
+                // A complete TTLV element is available. Try to parse it.
+                let request = RequestMessage::fast_scan(&mut scanner);
+                let consumed = available - scanner.remaining().as_flattened().len();
+                break (request, &buffer[..consumed]);
             }
-            return Ok(());
-        }
+
+            // 'buffer' did not contain enough data. Try to add to it.
+            if buffer.len() >= 8192 {
+                // The message being received is concerningly large.
+                warn!("Client {peer_addr} tried sending a >8KiB message");
+                return Ok(());
+            }
+            let start = buffer.len();
+            buffer.resize(8192, 0u8);
+
+            match stream.read(&mut buffer[start..8192]).await {
+                // The client has closed the connection.
+                Ok(0) => {
+                    if !buffer.is_empty() {
+                        warn!(
+                            "Client {peer_addr} closed connection with a partial request received"
+                        );
+                    }
+                    return Ok(());
+                }
+
+                // Some data was received successfully.
+                Ok(amt) => buffer.truncate(start + amt),
+
+                // An unexpected error has occurred.
+                Err(err) => {
+                    // TODO: Categorize the various std::io::ErrorKinds into
+                    // fatal and non-fatal variants and only abort on fatal
+                    // errors.
+                    warn!("Closing connection with client {peer_addr} due to error: {err}");
+                    return Ok(());
+                }
+            };
+        };
 
         let mut res_batch_items = vec![];
 
-        match kmip_ttlv::from_reader::<RequestMessage, _>(&mut stream, &reader_config).await {
-            Ok((req, _cap)) if !is_supported_protocol_version(&req) => {
+        match request {
+            Ok(request) if !is_supported_protocol_version(&request) => {
                 // https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613599
                 // 11 Error Handling
                 // 11.1 General
@@ -68,15 +109,15 @@ pub async fn handle_client_requests(
                 ));
             }
 
-            Ok((req, req_bytes)) => {
+            Ok(request) => {
                 if enabled!(Level::DEBUG) {
-                    let req_hex = mk_kmip_hex_dump(&req_bytes);
-                    let req_human = pp.to_string(&req_bytes);
+                    let req_hex = mk_kmip_hex_dump(&request_bytes);
+                    let req_human = pp.to_string(&request_bytes);
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
                 }
 
                 let (res, c, p) = tokio::task::spawn_blocking(move || {
-                    let r = process_request(&config, &pkcs11_pools, peer_addr, req);
+                    let r = process_request(&config, &pkcs11_pools, peer_addr, request);
                     (r, config, pkcs11_pools)
                 })
                 .await
@@ -88,17 +129,12 @@ pub async fn handle_client_requests(
                 res_batch_items.append(&mut res?);
             }
 
-            Err((err, _cap)) if is_disconnection_err(&err) => {
-                // The client has gone, terminate this response stream processor.
-                break Ok(());
-            }
-
-            Err((err, res_bytes)) => {
-                let req_hex = mk_kmip_hex_dump(&res_bytes);
-                let req_human = pp.to_string(&res_bytes);
+            Err(error) => {
+                let req_hex = mk_kmip_hex_dump(&request_bytes);
+                let req_human = pp.to_string(&request_bytes);
 
                 error!(
-                    "Error while parsing KMIP request from client {peer_addr}: {err}.\nRequest hex:\n{req_hex}\nRequest dump:\n{req_human}\n",
+                    "Error while parsing KMIP request from client {peer_addr}: {error}.\nRequest hex:\n{req_hex}\nRequest dump:\n{req_human}\n",
                 );
 
                 // https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html#_Toc409613599
@@ -112,11 +148,12 @@ pub async fn handle_client_requests(
                 //      Operation Failed"
                 res_batch_items.push(mk_err_batch_item(
                     ResultReason::GeneralFailure,
-                    format!("Unable to parse KMIP TTLV request: {err}"),
+                    format!("Unable to parse KMIP TTLV request: {error}"),
                 ));
             }
         };
 
+        buffer.drain(..request_bytes.len());
         let res_bytes = mk_response(res_batch_items);
 
         if enabled!(Level::DEBUG) {
@@ -233,15 +270,4 @@ fn is_supported_protocol_version(req: &RequestMessage) -> bool {
     let major_ver = ver.0.0;
     let minor_ver = ver.1.0;
     major_ver == 1 && minor_ver <= 2
-}
-
-pub fn is_disconnection_err(err: &kmip_ttlv::error::Error) -> bool {
-    if let kmip_ttlv::error::ErrorKind::IoError(err) = err.kind() {
-        matches!(
-            err.kind(),
-            std::io::ErrorKind::UnexpectedEof | std::io::ErrorKind::ConnectionReset
-        )
-    } else {
-        false
-    }
 }

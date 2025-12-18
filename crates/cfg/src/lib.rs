@@ -73,6 +73,15 @@ fn default_listen_port() -> u16 {
     5696
 }
 
+impl Default for ListenSocket {
+    fn default() -> Self {
+        Self {
+            addr: default_listen_addr(),
+            port: default_listen_port(),
+        }
+    }
+}
+
 impl Config {
     /// Adds the basic arguments to a Clap command.
     ///

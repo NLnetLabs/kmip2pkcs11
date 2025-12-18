@@ -4,7 +4,7 @@ use clap::{Args as _, FromArgMatches};
 use daemonbase::config::ConfigPath;
 use daemonbase::error::Failed;
 use daemonbase::{logging, process};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(clap::Parser)]
 pub struct Args {
@@ -24,7 +24,7 @@ pub struct Args {
 }
 
 /// A cryptographic token key lister
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Config {
     /// The logging configuration.
     #[serde(flatten)]
@@ -40,7 +40,7 @@ pub struct Config {
     pub server_identity: ServerIdentity,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct ServerIdentity {
     /// Path to the server certificate file in PEM format.
     #[serde(default)]
@@ -51,7 +51,7 @@ pub struct ServerIdentity {
     pub key_path: Option<PathBuf>,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct ListenSocket {
     /// IP address or hostname to listen on
     #[serde(default = "default_listen_addr")]

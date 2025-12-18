@@ -41,6 +41,11 @@ pub struct Config {
 
     #[serde(flatten)]
     pub server_identity: ServerIdentity,
+
+    #[serde(flatten)]
+    pub process: process::Config,
+
+    pub detach: bool,
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -112,11 +117,13 @@ impl Config {
     ///
     /// TODO: The current path needs to be provided to be able to deal with relative
     /// paths.
-    pub fn from_arg_matches(matches: &clap::ArgMatches) -> Result<(Self, Args), Failed> {
-        let args = Args::from_arg_matches(matches).expect("bug in command line arguments parser");
-        let toml_str = std::fs::read_to_string(&args.config).unwrap();
+    pub fn from_arg_matches(matches: &clap::ArgMatches) -> Result<Self, Failed> {
+        let Args { config, detach, log, process } = Args::from_arg_matches(matches).expect("bug in command line arguments parser");
+        let toml_str = std::fs::read_to_string(config).unwrap();
         let mut config = Self::from_toml(&toml_str, None::<PathBuf>).unwrap();
-        config.log.apply_args(&args.log);
-        Ok((config, args))
+        config.log.apply_args(&log);
+        config.process.apply_args(process);
+        config.detach = detach;
+        Ok(config)
     }
 }

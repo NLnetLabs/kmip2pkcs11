@@ -40,13 +40,13 @@ fn main() -> Result<(), ExitError> {
             .about("A KMIP to PKCS#11 relay"),
     )
     .get_matches();
-    let (mut config, args) = Config::from_arg_matches(&matches)?;
-    Logger::from_config(&config.log)?.switch_logging(args.detach)?;
-    let mut process = Process::from_config(args.process.into_config());
+    let mut config = Config::from_arg_matches(&matches)?;
+    Logger::from_config(&config.log)?.switch_logging(config.detach)?;
+    let mut process = Process::from_config(config.process.clone());
 
     // Note: This may fork. Don't create the Tokio runtime before calling this.
     // See: https://github.com/tokio-rs/tokio/issues/4301
-    process.setup_daemon(args.detach)?;
+    process.setup_daemon(config.detach)?;
 
     // Drop privileges before or after initializing the PKCS#11 library as it
     // may spawn threads which should not be done prior to forking.

@@ -1,20 +1,37 @@
-[package]
-name = "kmip2pkcs11"
+[workspace]
+resolver = "3"
+members = [".", "crates/cfg"]
+default-members = [".", "crates/cfg"]
+
+[workspace.package]
+authors = ["NLnet Labs <rust-team@nlnetlabs.nl>"]
+repository = "https://github.com/NLnetLabs/kmip2pkcs11/"
+license = "BSD-3-Clause"
 version = "0.1.0-alpha"
 edition = "2024"
-authors = ["NLnet Labs <rust-team@nlnetlabs.nl>"]
+
+[workspace.dependencies]
+clap = { version = "4.5", features = ["cargo", "derive"] }
+daemonbase = "0.1.4"
+
+[package]
+name = "kmip2pkcs11"
 description = "KMIP to PKCS#11 relay."
-repository = "https://github.com/NLnetLabs/kmip2pkcs11/"
 keywords = ["KMIP", "PKCS#11", "HSM", "Rust"]
 categories = ["cryptography"]
-license = "BSD-3-Clause"
 readme = "README.md"
 exclude = [".github", ".gitignore"]
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
 bcder = "0.7.5"
-clap = { version = "4.5", features = ["cargo", "derive"] }
+clap = { workspace = true }
 cryptoki = "^0.10.0"
+daemonbase = { workspace = true }
 domain = { git = "https://github.com/NLnetLabs/domain.git", branch = "patches-for-nameshed-prototype", features = [
   "unstable-crypto-sign",
 ] }
@@ -26,6 +43,8 @@ kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", v
 kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
   "tls-with-tokio-rustls",
 ] }
+kmip2pkcs11-cfg = { path = "crates/cfg" }
+listenfd = "1.0.2"
 log = "0.4"
 moka = { version = "0.12.10", features = ["sync"] }
 r2d2 = "0.8.10"
@@ -34,11 +53,9 @@ rcgen = { version = "0.14.3", optional = true }
 rpki = { version = "0.18", features = ["crypto"] }
 tokio = { version = "1.47.1", features = ["macros", "net", "rt-multi-thread"] }
 rustls = "0.23.31"
-tokio-rustls = "0.26.2"
-daemonbase = "0.1.4"
 serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.9.5"
-listenfd = "1.0.2"
+tokio-rustls = "0.26.2"
 
 [features]
 default = ["domain/ring", "rcgen"]

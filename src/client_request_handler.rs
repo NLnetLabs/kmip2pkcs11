@@ -9,13 +9,13 @@ use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::{BatchItem, ResultReason};
 use kmip_ttlv::PrettyPrinter;
+use kmip2pkcs11_cfg::Config;
 use log::{debug, error, info, log_enabled, warn};
 use moka::sync::Cache;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
 
-use crate::config::Config;
 use crate::kmip::operations::{
     activate, create_key_pair, discover_versions, get, modify_attribute, query, sign, unknown,
 };

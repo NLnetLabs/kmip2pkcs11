@@ -7,10 +7,10 @@ use cryptoki::context::{CInitializeArgs, Function, Pkcs11};
 use cryptoki::object::{Attribute, ObjectClass, ObjectHandle};
 use cryptoki::slot::Slot;
 use kmip::types::common::UniqueIdentifier;
+use kmip2pkcs11_cfg::Config;
 use log::info;
 use rand::RngCore;
 
-use crate::config::Config;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
 

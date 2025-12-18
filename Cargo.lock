@@ -767,6 +767,7 @@ dependencies = [
  "hex",
  "kmip-protocol",
  "kmip-ttlv",
+ "kmip2pkcs11-cfg",
  "listenfd",
  "log",
  "moka",
@@ -778,6 +779,16 @@ dependencies = [
  "serde",
  "tokio",
  "tokio-rustls 0.26.2",
+ "toml",
+]
+
+[[package]]
+name = "kmip2pkcs11-cfg"
+version = "0.1.0-alpha"
+dependencies = [
+ "clap",
+ "daemonbase",
+ "serde",
  "toml",
 ]
 

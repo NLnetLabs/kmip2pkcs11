@@ -1,12 +1,11 @@
 mod client_request_handler;
-mod config;
 mod kmip;
 mod pkcs11;
 
 use std::sync::Arc;
 
+use kmip2pkcs11_cfg::{Config, ServerIdentity};
 use clap::{Command, crate_authors, crate_version};
-use config::Config;
 use cryptoki::context::{Function, Pkcs11};
 use cryptoki::error::Error as CryptokiError;
 use cryptoki::error::RvError;
@@ -21,7 +20,6 @@ use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 
 use crate::client_request_handler::handle_client_requests;
-use crate::config::ServerIdentity;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::util::{Pkcs11Pools, init_pkcs11};
 

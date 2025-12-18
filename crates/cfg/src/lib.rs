@@ -6,6 +6,9 @@ use daemonbase::error::Failed;
 use daemonbase::{logging, process};
 use serde::{Deserialize, Serialize};
 
+// Re-export daemonbase so users can get to the inner types used below.
+pub use daemonbase;
+
 #[derive(clap::Parser)]
 pub struct Args {
     /// The config file to use.

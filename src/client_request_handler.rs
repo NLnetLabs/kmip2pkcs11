@@ -9,12 +9,12 @@ use kmip::types::common::Operation;
 use kmip::types::request::RequestMessage;
 use kmip::types::response::{BatchItem, ResultReason};
 use kmip_ttlv::PrettyPrinter;
-use kmip2pkcs11_cfg::Config;
-use log::{debug, error, info, log_enabled, warn};
+use kmip2pkcs11_cfg::v1::Config;
 use moka::sync::Cache;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
+use tracing::{debug, enabled, error, info, warn, Level};
 
 use crate::kmip::operations::{
     activate, create_key_pair, discover_versions, get, modify_attribute, query, sign, unknown,
@@ -69,7 +69,7 @@ pub async fn handle_client_requests(
             }
 
             Ok((req, req_bytes)) => {
-                if log_enabled!(log::Level::Debug) {
+                if enabled!(Level::DEBUG) {
                     let req_hex = mk_kmip_hex_dump(&req_bytes);
                     let req_human = pp.to_string(&req_bytes);
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
@@ -119,7 +119,7 @@ pub async fn handle_client_requests(
 
         let res_bytes = mk_response(res_batch_items);
 
-        if log_enabled!(log::Level::Debug) {
+        if enabled!(Level::DEBUG) {
             let res_hex = mk_kmip_hex_dump(&res_bytes);
             let res_human = pp.to_string(&res_bytes);
             debug!("Response hex:\n{res_hex}\nResponse dump:\n{res_human}\n");

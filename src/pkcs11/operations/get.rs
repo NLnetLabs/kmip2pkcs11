@@ -8,7 +8,7 @@ use kmip::types::common::{
     CryptographicAlgorithm, KeyFormatType, KeyMaterial, TransparentRSAPublicKey, UniqueIdentifier,
 };
 use kmip::types::response::{KeyBlock, KeyValue};
-use log::{debug, info, trace};
+use tracing::{debug, info, trace};
 
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::Pkcs11Connection;

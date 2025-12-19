@@ -4,20 +4,21 @@ mod pkcs11;
 
 use std::sync::Arc;
 
-use kmip2pkcs11_cfg::{Config, ServerIdentity};
-use clap::{Command, crate_authors, crate_version};
+use clap::{Command, crate_authors, crate_description, crate_version};
 use cryptoki::context::{Function, Pkcs11};
 use cryptoki::error::Error as CryptokiError;
 use cryptoki::error::RvError;
-use daemonbase::error::ExitError;
-use daemonbase::logging::Logger;
+use daemonbase::error::{ExitError, Failed};
+use daemonbase::logging::{Facility, Logger, Target};
 use daemonbase::process::Process;
-use log::{error, info, warn};
+use kmip2pkcs11_cfg::args::Args;
+use kmip2pkcs11_cfg::v1::{Config, LogLevel, LogTarget, ServerIdentity};
 use rcgen::{CertifiedKey, generate_simple_self_signed};
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
+use tracing::{error, info, warn};
 
 use crate::client_request_handler::handle_client_requests;
 use crate::pkcs11::error::Error;
@@ -33,33 +34,75 @@ impl From<pkcs11::error::Error> for ExitError {
 fn main() -> Result<(), ExitError> {
     Logger::init_logging()?;
 
-    let matches = Config::config_args(
-        Command::new("kmip2pkcs11")
-            .version(crate_version!())
-            .author(crate_authors!())
-            .about("A KMIP to PKCS#11 relay"),
-    )
-    .get_matches();
-    let mut config = Config::from_arg_matches(&matches)?;
-    Logger::from_config(&config.log)?.switch_logging(config.detach)?;
-    let mut process = Process::from_config(config.process.clone());
+    // Parse command-line arguments.
+    let app = Command::new("kmip2pkcs11")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .next_line_help(true)
+        .arg(
+            clap::Arg::new("check_config")
+                .long("check-config")
+                .action(clap::ArgAction::SetTrue)
+                .help("Check the configuration and exit"),
+        );
+    let cmd = Args::setup(app);
+    let matches = cmd.get_matches();
+
+    // Process parsed command-line arguments.
+    let args = Args::process(&matches);
+
+    // Load the config file.
+    let mut config = Config::from_file(&args.config)
+        .inspect_err(|err| error!("Invalid configuration file: {err}"))
+        .map_err(|_| Failed)?;
+
+    // Merge the command-line arguments into the config file.
+    args.merge(&mut config);
+
+    let level_filter = match config.daemon.log.log_level {
+        LogLevel::Trace => daemonbase::logging::LevelFilter::Trace,
+        LogLevel::Debug => daemonbase::logging::LevelFilter::Debug,
+        LogLevel::Info => daemonbase::logging::LevelFilter::Info,
+        LogLevel::Warning => daemonbase::logging::LevelFilter::Warn,
+        LogLevel::Error => daemonbase::logging::LevelFilter::Error,
+    };
+    let log_target = match &config.daemon.log.log_target {
+        LogTarget::File(path) => Target::File(path.to_path_buf()),
+        LogTarget::Syslog => Target::Syslog(Facility::LOG_DAEMON),
+        LogTarget::Stderr => Target::Stderr,
+    };
+    Logger::new(level_filter, log_target).switch_logging(config.daemon.daemonize)?;
+    let mut process_config = daemonbase::process::Config::default();
+    if let Some(file) = &config.daemon.pid_file {
+        process_config = process_config.with_pid_file(file.clone().into());
+    }
+    if let Some(path) = &config.daemon.chroot {
+        process_config = process_config.with_chroot(path.clone().into());
+    }
+    if let Some((user, group)) = &config.daemon.identity {
+        process_config = process_config
+            .with_user_id(user.clone())
+            .with_group_id(group.clone());
+    }
+    let mut process = Process::from_config(process_config);
 
     // Note: This may fork. Don't create the Tokio runtime before calling this.
     // See: https://github.com/tokio-rs/tokio/issues/4301
-    process.setup_daemon(config.detach)?;
+    process.setup_daemon(config.daemon.daemonize)?;
 
     // Drop privileges before or after initializing the PKCS#11 library as it
     // may spawn threads which should not be done prior to forking.
     info!(
         "Loading and initializing PKCS#11 library {}",
-        config.lib_path.display()
+        config.pkcs11.lib_path.display()
     );
     let pkcs11 =
         init_pkcs11(&mut config).map_err(|err| improve_pkcs11_finalize_err(&config, err))?;
     announce_pkcs11_info(&pkcs11)?;
     let pkcs11_pools = Pkcs11Pools::new(pkcs11);
 
-    let (certs, key) = load_or_generate_server_identity_cert(config.server_identity.clone())?;
+    let (certs, key) = load_or_generate_server_identity_cert(config.server.identity.clone())?;
 
     let rustls_config = rustls::ServerConfig::builder()
         .with_no_client_auth()
@@ -102,17 +145,17 @@ fn main() -> Result<(), ExitError> {
             } else {
                 info!(
                     "Listening on {}:{}",
-                    config.listen_socket.addr, config.listen_socket.port
+                    config.server.listen_socket.addr, config.server.listen_socket.port
                 );
                 let listener = TcpListener::bind(format!(
                     "{}:{}",
-                    config.listen_socket.addr, config.listen_socket.port
+                    config.server.listen_socket.addr, config.server.listen_socket.port
                 ))
                 .await
                 .inspect_err(|err| {
                     error!(
                         "TCP fatal error while attempting to bind to {}:{}: {err}",
-                        config.listen_socket.addr, config.listen_socket.port
+                        config.server.listen_socket.addr, config.server.listen_socket.port
                     )
                 })
                 .map_err(|_| ExitError::default())?;
@@ -173,7 +216,7 @@ fn improve_pkcs11_finalize_err(config: &Config, err: pkcs11::error::Error) -> pk
         ) {
             Error::UnusableConfig(format!(
                 "PKCS#11 function C_Initialize() failed. Please consult the documentation for the PKCS#11 library at '{}'. Possible causes include insufficient access rights (e.g. to read a PKCS#11 vendor specific configuration file) or missing PKCS#11 vendor specific environment variables.",
-                config.lib_path.display()
+                config.pkcs11.lib_path.display()
             ))
         } else {
             err

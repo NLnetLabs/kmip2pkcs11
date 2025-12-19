@@ -10,8 +10,8 @@ use cryptoki::error::RvError;
 use cryptoki::session::{Session, SessionState, UserType};
 use cryptoki::slot::{Limit, Slot};
 use cryptoki::types::AuthPin;
-use log::{debug, info};
 use r2d2::ManageConnection;
+use tracing::{debug, info};
 
 use crate::client_request_handler::HandleCache;
 use crate::pkcs11::error::Error;

@@ -6,7 +6,7 @@ use kmip::types::{
         ResultStatus, ServerInformation,
     },
 };
-use kmip2pkcs11_cfg::Config;
+use kmip2pkcs11_cfg::v1::Config;
 
 use crate::pkcs11::{pool::Pkcs11Pool, util::get_pkcs11_info};
 

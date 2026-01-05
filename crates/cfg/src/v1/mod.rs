@@ -75,11 +75,11 @@ impl Config {
 pub struct LoggingConfig {
     /// The minimum severity of messages to log.
     #[serde(default)]
-    pub level: LogLevel,
+    pub log_level: LogLevel,
 
     /// Where to log messages to.
     #[serde(default)]
-    pub target: LogTarget,
+    pub log_target: LogTarget,
 }
 
 //-------- LogTarget ---------------------------------------------------------

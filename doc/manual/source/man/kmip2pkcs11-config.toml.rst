@@ -7,7 +7,7 @@ the option's format.
 
 .. Note::
 
-   ``kmip2pkcs11`` must be restarted for config file changes to take effect.`
+   ``kmip2pkcs11`` must be restarted for config file changes to take effect.
 
 Example
 -------

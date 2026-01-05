@@ -16,13 +16,10 @@
 //! can be fit into Cascade.
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
-use daemonbase::{
-    config::ConfigPath,
-    process::{GroupId, UserId},
-};
+use daemonbase::process::{GroupId, UserId};
 use serde::{Deserialize, Serialize};
 use tracing::level_filters::LevelFilter;
 
@@ -31,7 +28,7 @@ use tracing::level_filters::LevelFilter;
 /// Configuration for kmip2pkcs11.
 // Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L27
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
     /// Daemon-related configuration.
     #[serde(default)]
@@ -45,41 +42,20 @@ pub struct Config {
     pub server: ServerConfig,
 }
 
-impl Config {
-    /// Creates a configuration from a bytes slice with TOML data.
-    pub fn from_toml(
-        slice: &str,
-        base_dir: Option<impl AsRef<Path>>,
-    ) -> Result<Self, toml::de::Error> {
-        if let Some(ref base_dir) = base_dir {
-            ConfigPath::set_base_path(base_dir.as_ref().into())
-        }
-        let res = toml::de::from_str(slice);
-        ConfigPath::clear_base_path();
-        res
-    }
-
-    /// Creates a configuration from a configuration file.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
-        let toml_str = std::fs::read_to_string(path).unwrap();
-        Self::from_toml(&toml_str, None::<PathBuf>).map_err(|err| err.to_string())
-    }
-}
-
 //-------- LoggingConfig -----------------------------------------------------
 
 /// Logging configuration for kmip2pkcs11.
 // Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L193
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct LoggingConfig {
     /// The minimum severity of messages to log.
-    #[serde(default)]
-    pub log_level: LogLevel,
+    #[serde(default, rename = "log-level")]
+    pub level: LogLevel,
 
     /// Where to log messages to.
-    #[serde(default)]
-    pub log_target: LogTarget,
+    #[serde(default, rename = "log-target")]
+    pub target: LogTarget,
 }
 
 //-------- LogTarget ---------------------------------------------------------
@@ -87,7 +63,7 @@ pub struct LoggingConfig {
 /// A logging target.
 // Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L397
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum LogTarget {
     /// Append logs to a file.
     ///
@@ -150,7 +126,7 @@ impl From<LogLevel> for LevelFilter {
 /// Configuration settings required for kmip2pkcs11 to be able to load and use
 /// a customer supplied PKCS#11 module.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Pkcs11Config {
     /// Path to the PKCS#11 .so library file.
     pub lib_path: PathBuf,
@@ -161,7 +137,7 @@ pub struct Pkcs11Config {
 /// Daemon-related configuration for kmip2pkcs11.
 // Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L152
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct DaemonConfig {
     /// The logging configuration.
     #[serde(flatten)]
@@ -188,7 +164,7 @@ pub struct DaemonConfig {
 
 /// Configuration for the KMIP TCP+TLS server.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct ServerConfig {
     /// The TCP socket address to listen on.
     #[serde(default = "default_server_addr")]
@@ -223,7 +199,7 @@ fn default_server_addr() -> SocketAddr {
 /// TLS certificate and corresponding private key for use with the KMIP
 /// TCP+TLS server.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct ServerIdentity {
     /// Path to the server certificate file in PEM format.
     pub cert_path: PathBuf,

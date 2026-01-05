@@ -9,7 +9,7 @@ use clap::{
     builder::{EnumValueParser, PathBufValueParser, PossibleValue, ValueParser},
 };
 
-use crate::v1::{Config, LogLevel, LogTarget};
+use crate::v1::{LogLevel, LogTarget};
 
 pub struct Args {
     /// The configuration file to load.
@@ -70,15 +70,19 @@ impl Args {
     }
 
     /// Merge this into a [`Config`].
-    pub fn merge(self, config: &mut Config) {
-        if let Some(level) = self.log_level {
-            config.daemon.log.level = level;
-        }
-        if let Some(target) = self.log_target {
-            config.daemon.log.target = target;
-        }
-        if self.daemonize {
-            config.daemon.daemonize = true;
+    pub fn merge(self, config: &mut crate::Config) {
+        match config {
+            crate::Config::V1(config) => {
+                if let Some(level) = self.log_level {
+                    config.daemon.log.level = level;
+                }
+                if let Some(target) = self.log_target {
+                    config.daemon.log.target = target;
+                }
+                if self.daemonize {
+                    config.daemon.daemonize = true;
+                }
+            }
         }
     }
 }

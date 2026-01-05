@@ -53,7 +53,7 @@ fn main() -> Result<(), ExitError> {
     let args = Args::process(&matches);
 
     // Load the config file.
-    let mut config = Config::from_file(&args.config)
+    let mut config = kmip2pkcs11_cfg::Config::from_file(&args.config)
         .inspect_err(|err| error!("Invalid configuration file: {err}"))
         .map_err(|_| Failed)?;
 
@@ -65,140 +65,145 @@ fn main() -> Result<(), ExitError> {
     // Merge the command-line arguments into the config file.
     args.merge(&mut config);
 
-    let level_filter = match config.daemon.log.level {
-        LogLevel::Trace => daemonbase::logging::LevelFilter::Trace,
-        LogLevel::Debug => daemonbase::logging::LevelFilter::Debug,
-        LogLevel::Info => daemonbase::logging::LevelFilter::Info,
-        LogLevel::Warning => daemonbase::logging::LevelFilter::Warn,
-        LogLevel::Error => daemonbase::logging::LevelFilter::Error,
-    };
-    let log_target = match &config.daemon.log.target {
-        LogTarget::File(path) => Target::File(path.to_path_buf()),
-        LogTarget::Syslog => Target::Syslog(Facility::LOG_DAEMON),
-        LogTarget::Stderr => Target::Stderr,
-    };
-    Logger::new(level_filter, log_target).switch_logging(config.daemon.daemonize)?;
-    let mut process_config = daemonbase::process::Config::default();
-    if let Some(file) = &config.daemon.pid_file {
-        process_config = process_config.with_pid_file(file.clone().into());
-    }
-    if let Some(path) = &config.daemon.chroot {
-        process_config = process_config.with_chroot(path.clone().into());
-    }
-    if let Some((user, group)) = &config.daemon.identity {
-        process_config = process_config
-            .with_user_id(user.clone())
-            .with_group_id(group.clone());
-    }
-    let mut process = Process::from_config(process_config);
-
-    // Note: This may fork. Don't create the Tokio runtime before calling this.
-    // See: https://github.com/tokio-rs/tokio/issues/4301
-    process.setup_daemon(config.daemon.daemonize)?;
-
-    // Drop privileges before or after initializing the PKCS#11 library as it
-    // may spawn threads which should not be done prior to forking.
-    info!(
-        "Loading and initializing PKCS#11 library {}",
-        config.pkcs11.lib_path.display()
-    );
-    let pkcs11 =
-        init_pkcs11(&mut config).map_err(|err| improve_pkcs11_finalize_err(&config, err))?;
-    announce_pkcs11_info(&pkcs11)?;
-    let pkcs11_pools = Pkcs11Pools::new(pkcs11);
-
-    let (certs, key) = load_or_generate_server_identity_cert(config.server.identity.clone())?;
-
-    let rustls_config = rustls::ServerConfig::builder()
-        .with_no_client_auth()
-        .with_single_cert(certs, key)
-        .inspect_err(|err| error!("TLS fatal error: {err}"))
-        .map_err(|_| ExitError::default())?;
-    let acceptor = TlsAcceptor::from(Arc::new(rustls_config));
-
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .thread_name("kmip2pkcs11-worker")
-        .build()
-        .unwrap();
-
-    runtime.block_on(async move {
-        // Use the socket supplied by systemd in preference to the config file
-        // defined address and port.
-        let listener =
-            if let Ok(Some(std_listener)) = listenfd::ListenFd::from_env().take_tcp_listener(0) {
-                info!(
-                    "Listening on systemd supplied socket at {}",
-                    std_listener
-                        .local_addr()
-                        .map(|addr| addr.to_string())
-                        .unwrap_or("unknown".into())
-                );
-                // As required by Tokio set the listener into non-blocking mode.
-                // See: https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html#notes
-                std_listener.set_nonblocking(true)
-                    .inspect_err(|err| {
-                        error!("Unable to set listener received from systemd into non-blocking mode: {err}")
-                    })
-                    .map_err(|_| ExitError::default())?;
-                TcpListener::from_std(std_listener)
-                    .inspect_err(|err| {
-                        error!("Unable to convert listener received from systemd into a Tokio TcpListener: {err}")
-                    })
-            } else {
-                info!("Listening on {}", config.server.addr);
-                TcpListener::bind(config.server.addr)
-                .await
-                .inspect_err(|err| {
-                    error!(
-                        "TCP fatal error while attempting to bind to {}: {err}",
-                        config.server.addr
-                    )
-                })
-            }
-            .map_err(|_| ExitError::default())?;
-
-        // TODO: This doesn't log at info/debug/trace level what it is doing
-        // unless it fails. We also can't log ourselves if we think privileges
-        // will be dropped because the args.process member fields are not visible
-        // to us.
-        process.drop_privileges()?;
-
-        loop {
-            let Ok((stream, peer_addr)) = listener
-                .accept()
-                .await
-                .inspect_err(|err| error!("Error while accepting TCP connection: {err}"))
-            else {
-                continue;
+    match config {
+        kmip2pkcs11_cfg::Config::V1(mut config) => {
+            let level_filter = match &config.daemon.log.level {
+                LogLevel::Trace => daemonbase::logging::LevelFilter::Trace,
+                LogLevel::Debug => daemonbase::logging::LevelFilter::Debug,
+                LogLevel::Info => daemonbase::logging::LevelFilter::Info,
+                LogLevel::Warning => daemonbase::logging::LevelFilter::Warn,
+                LogLevel::Error => daemonbase::logging::LevelFilter::Error,
             };
-            let acceptor = acceptor.clone();
-            let config = config.clone();
-            let pkcs11_pools = pkcs11_pools.clone();
+            let log_target = match &config.daemon.log.target {
+                LogTarget::File(path) => Target::File(path.to_path_buf()),
+                LogTarget::Syslog => Target::Syslog(Facility::LOG_DAEMON),
+                LogTarget::Stderr => Target::Stderr,
+            };
+            Logger::new(level_filter, log_target).switch_logging(config.daemon.daemonize)?;
+            let mut process_config = daemonbase::process::Config::default();
+            if let Some(file) = &config.daemon.pid_file {
+                process_config = process_config.with_pid_file(file.clone().into());
+            }
+            if let Some(path) = &config.daemon.chroot {
+                process_config = process_config.with_chroot(path.clone().into());
+            }
+            if let Some((user, group)) = &config.daemon.identity {
+                process_config = process_config
+                    .with_user_id(user.clone())
+                    .with_group_id(group.clone());
+            }
+            let mut process = Process::from_config(process_config);
 
-            info!("Waiting for connections...");
-            match acceptor.accept(stream).await {
-                Ok(stream) => {
-                    info!("Accepting connection from {peer_addr}");
+            // Note: This may fork. Don't create the Tokio runtime before calling this.
+            // See: https://github.com/tokio-rs/tokio/issues/4301
+            process.setup_daemon(config.daemon.daemonize)?;
+
+            // Drop privileges before or after initializing the PKCS#11 library as it
+            // may spawn threads which should not be done prior to forking.
+            info!(
+                "Loading and initializing PKCS#11 library {}",
+                config.pkcs11.lib_path.display()
+            );
+            let pkcs11 = init_pkcs11(&mut config)
+                .map_err(|err| improve_pkcs11_finalize_err(&config, err))?;
+            announce_pkcs11_info(&pkcs11)?;
+            let pkcs11_pools = Pkcs11Pools::new(pkcs11);
+
+            let (certs, key) =
+                load_or_generate_server_identity_cert(config.server.identity.clone())?;
+
+            let rustls_config = rustls::ServerConfig::builder()
+                .with_no_client_auth()
+                .with_single_cert(certs, key)
+                .inspect_err(|err| error!("TLS fatal error: {err}"))
+                .map_err(|_| ExitError::default())?;
+            let acceptor = TlsAcceptor::from(Arc::new(rustls_config));
+
+            let runtime = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .thread_name("kmip2pkcs11-worker")
+                .build()
+                .unwrap();
+
+            runtime.block_on(async move {
+                // Use the socket supplied by systemd in preference to the config file
+                // defined address and port.
+                let listener =
+                    if let Ok(Some(std_listener)) = listenfd::ListenFd::from_env().take_tcp_listener(0) {
+                        info!(
+                            "Listening on systemd supplied socket at {}",
+                            std_listener
+                                .local_addr()
+                                .map(|addr| addr.to_string())
+                                .unwrap_or("unknown".into())
+                        );
+                        // As required by Tokio set the listener into non-blocking mode.
+                        // See: https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html#notes
+                        std_listener.set_nonblocking(true)
+                            .inspect_err(|err| {
+                                error!("Unable to set listener received from systemd into non-blocking mode: {err}")
+                            })
+                            .map_err(|_| ExitError::default())?;
+                        TcpListener::from_std(std_listener)
+                            .inspect_err(|err| {
+                                error!("Unable to convert listener received from systemd into a Tokio TcpListener: {err}")
+                            })
+                    } else {
+                        info!("Listening on {}", config.server.addr);
+                        TcpListener::bind(config.server.addr)
+                        .await
+                        .inspect_err(|err| {
+                            error!(
+                                "TCP fatal error while attempting to bind to {}: {err}",
+                                config.server.addr
+                            )
+                        })
+                    }
+                    .map_err(|_| ExitError::default())?;
+
+                // TODO: This doesn't log at info/debug/trace level what it is doing
+                // unless it fails. We also can't log ourselves if we think privileges
+                // will be dropped because the args.process member fields are not visible
+                // to us.
+                process.drop_privileges()?;
+
+                loop {
+                    let Ok((stream, peer_addr)) = listener
+                        .accept()
+                        .await
+                        .inspect_err(|err| error!("Error while accepting TCP connection: {err}"))
+                    else {
+                        continue;
+                    };
+                    let acceptor = acceptor.clone();
                     let config = config.clone();
                     let pkcs11_pools = pkcs11_pools.clone();
 
-                    tokio::spawn(async move {
-                        if let Err(_err) =
-                            handle_client_requests(stream, peer_addr, config, pkcs11_pools).await
-                        {
-                            error!("Connection with {peer_addr} terminated abnormally"); //: {err}");
-                        } else {
-                            info!("Connection with {peer_addr} terminated");
+                    info!("Waiting for connections...");
+                    match acceptor.accept(stream).await {
+                        Ok(stream) => {
+                            info!("Accepting connection from {peer_addr}");
+                            let config = config.clone();
+                            let pkcs11_pools = pkcs11_pools.clone();
+
+                            tokio::spawn(async move {
+                                if let Err(_err) =
+                                    handle_client_requests(stream, peer_addr, config, pkcs11_pools).await
+                                {
+                                    error!("Connection with {peer_addr} terminated abnormally"); //: {err}");
+                                } else {
+                                    info!("Connection with {peer_addr} terminated");
+                                }
+                            });
                         }
-                    });
+                        Err(err) => {
+                            error!("Error accepting connection: {err}");
+                        }
+                    }
                 }
-                Err(err) => {
-                    error!("Error accepting connection: {err}");
-                }
-            }
+            })
         }
-    })
+    }
 }
 
 fn improve_pkcs11_finalize_err(config: &Config, err: pkcs11::error::Error) -> pkcs11::error::Error {

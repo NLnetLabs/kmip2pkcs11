@@ -19,11 +19,14 @@ mod tests {
 
     #[test]
     fn parse_v1() {
-        let _config: Config = toml::from_str(r#"
+        let _config: Config = toml::from_str(
+            r#"
             version = 'v1'
 
             [pkcs11]
             lib-path = '/some/path'
-        "#).unwrap();
+        "#,
+        )
+        .unwrap();
     }
 }

@@ -14,7 +14,7 @@ use moka::sync::Cache;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
-use tracing::{debug, enabled, error, info, warn, Level};
+use tracing::{Level, debug, enabled, error, info, warn};
 
 use crate::kmip::operations::{
     activate, create_key_pair, discover_versions, get, modify_attribute, query, sign, unknown,

@@ -1,5 +1,5 @@
 # Configuring kmip2pkcs11
-# ===================
+# =======================
 #
 # This is a template file.  Uncommented lines demonstrate the default settings.
 # You can copy this and customize it to your liking, or write a configuration
@@ -14,8 +14,31 @@
 # - 'v1': This format.
 version = "v1"
 
+
+# Settings related to the PKCS#11 module to load.
+[pkcs11]
+# The PKCS#11 module to use to communicate with an HSM.
+# TODO: Set this to the actual path to the PKCS#11 module to use.
+#lib_path = "/path/to/your/pkcs11.so"
+#lib_path = "/usr/safenet/lunaclient/lib/libCryptoki2_64.so"
+lib-path = "/usr/lib64/pkcs11/yubihsm_pkcs11.so"
+
+
+# Settings related to the KMIP TCP+TLS interface offered by kmip2pkcs11 to
+# clients.
+[server]
+# The network address and port to listen on for incoming KMIP requests.
+addr = "127.0.0.1:5696"
+
+#[server.identity]
+# Optional path to ia TLS certificate and key to use (in PEM format).
+# When NOT specified a self-signed TLS certificate will be generated
+# automatically.
+#cert_path = "/path/to/cert/file"
+#key_path = "/path/to/key/file"
+
 # Settings relevant to any daemon program.
-[daemon]
+#[daemon]
 
 # The minimum severity of the messages logged by the daemon.
 #
@@ -26,7 +49,7 @@ version = "v1"
 # - 'info': Things are proceeding as expected.
 # - 'warning': Something does not appear to be correct.
 # - 'error': Something went wrong (but kmip2pkcs11 can recover).
-log-level = "info"
+#log-level = "info"
 
 # The location the daemon writes logs to.
 #
@@ -45,7 +68,7 @@ log-level = "info"
 # NOTE: When using systemd, 'syslog' and 'stdout' are the most reliable options.
 # systemd environments are often heavily isolated, making file-based logging
 # difficult.
-log-target = { type = "stderr" }
+#log-target = { type = "stderr" }
 #log-target = { type = "syslog" }
 #log-target = { type = "file", path = "/var/log/kmip2pkcs11.log" }
 
@@ -63,7 +86,7 @@ log-target = { type = "stderr" }
 # 'pid-file' and 'identity' settings (although they remain optional).
 #
 # TODO: Link to a dedicated systemd / daemonization guide for kmip2pkcs11.
-daemonize = false
+#daemonize = false
 
 # The path to a PID file to maintain, if any.
 #
@@ -85,29 +108,3 @@ daemonize = false
 # NOTE: When using systemd, you should rely on its 'User=' and 'Group=' options
 #   instead.  See <https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#User=>.
 #identity = "kmip2pkcs11:kmip2pkcs11"
-
-
-# Settings related to the PKCS#11 module to load.
-[pkcs11]
-# The PKCS#11 module to use to communicate with an HSM.
-# TODO: Set this to the actual path to the PKCS#11 module to use.
-#lib_path = "/path/to/your/pkcs11.so"
-#lib_path = "/usr/safenet/lunaclient/lib/libCryptoki2_64.so"
-lib_path = "/usr/lib64/pkcs11/yubihsm_pkcs11.so"
-
-
-# Settings related to the KMIP TCP+TLS interface offered by kmip2pkcs11 to
-# clients.
-[server]
-# The network address and port to listen on for incoming KMIP requests.
-
-[server.listen_socket]
-addr = "127.0.0.1"
-port = 1818
-
-[server.identity]
-# Optional path to ia TLS certificate and key to use (in PEM format).
-# When one or both settings are NOT specified a self-signed TLS certificate
-# will be generated automatically.
-# cert_path = "/path/to/cert/file"
-# key_path = "/path/to/key/file"

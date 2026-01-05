@@ -65,14 +65,16 @@ to implement the tiny fraction of the KMIP specification needed by the Cascade
 project, and the only KMIP client that will be tested against will be Cascade.
 
 However, the supported requests cover only the small fraction of the KMIP
-specification this application implements support for only a limited fraction of
-the entire interface defined by the applicable versions of the KMIP and PKCS#11
-specifications, specifically whatever is needed to power our own projects.
+specification this application implements support for only a limited fraction
+of the entire interface defined by the applicable versions of the KMIP and
+PKCS#11 specifications, specifically whatever is needed to power our own
+projects.
 
 Technical foundations
 """""""""""""""""""""
 
-This application is possible thanks to the following foundational Rust crates on which it builds:
+This application is possible thanks to the following foundational Rust crates
+on which it builds:
 
 - `cryptoki <https://crates.io/crates/cryptoki>`_
 - `kmip-protocol <https://crates.io/crates/kmip-protocol>`_
@@ -80,21 +82,26 @@ This application is possible thanks to the following foundational Rust crates on
 - `rustls <https://crates.io/crates/rustls>`_
 - `tokio <https://crates.io/crates/tokio>`_
 
-The code of the `keyls <https://github.com/ximon18/keyls>`_ tool served as a very
-useful starting point as it already supported both KMIP and PKCS#11 albeit only
-as a client and not as a server.
+The code of the `keyls <https://github.com/ximon18/keyls>`_ tool served as
+a very useful starting point as it already supported both KMIP and PKCS#11
+albeit only as a client and not as a server.
 
 Prerequisites
 -------------
 
-- A TLS certificate and key such as the example ones available here: https://github.com/rustls/hyper-rustls/blob/main/examples/. Note: This application may be updated in future to use a pre-shared key approach instead.
+- A TLS certificate and key such as the example ones available here:
+  https://github.com/rustls/hyper-rustls/blob/main/examples/. Note: This
+  application may be updated in future to use a pre-shared key approach instead.
 
-- A PKCS#11 library and associated HSM to interact with, either a real hardware device or a virtual HSM such as https://www.softhsm.org/.
+- A PKCS#11 library and associated HSM to interact with, either a real
+  hardware device or a virtual HSM such as https://www.softhsm.org/.
 
 Supported protocols
 -------------------
 
-This application currently only supports KMIP via the TCP+TLS+TTLV transport. There is no support for the HTTPS+XML or HTTPS+JSON transports defined by the KMIP profiles specification.
+This application currently only supports KMIP via the TCP+TLS+TTLV transport.
+There is no support for the HTTPS+XML or HTTPS+JSON transports defined by the
+KMIP profiles specification.
 
 Supported operations
 --------------------

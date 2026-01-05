@@ -18,8 +18,10 @@ Example
 
     [daemon]
     log-level = "info"
-    log-target = { type = "stderr" }
-    daemonize = false
+    log-target = { type = "syslog" }
+    daemonize = true
+    pid_file = "/var/run/kmip2pkcs11.pid"
+    identity = "kmip2pkcs11:kmip2pkcs11"
 
     [pkcs11]
     lib-path = "/path/to/your/pkcs11.so"

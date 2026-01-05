@@ -18,7 +18,7 @@ Example
 
     [daemon]
     log-level = "info"
-    log-target = { type = "stdout" }
+    log-target = { type = "stderr" }
     daemonize = false
 
     [pkcs11]
@@ -172,6 +172,7 @@ Files
 
 /etc/kmip2pkcs11/config.toml
     Default **kmip2pkcs11** config file.
+
 
 See Also
 --------

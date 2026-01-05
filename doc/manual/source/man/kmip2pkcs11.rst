@@ -43,7 +43,7 @@ Options
 
 .. option:: -l, --log <TARGET>
 
-          Where logs should be written to [possible values: stdout, stderr,
+          Where logs should be written to [possible values: stderr,
           file:<PATH>, syslog].
 
 .. option:: -d, --daemonize

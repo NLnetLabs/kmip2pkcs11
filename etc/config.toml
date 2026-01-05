@@ -17,6 +17,7 @@ version = "v1"
 
 # Settings related to the PKCS#11 module to load.
 [pkcs11]
+
 # The PKCS#11 module to use to communicate with an HSM.
 # TODO: Set this to the actual path to the PKCS#11 module to use.
 #lib_path = "/path/to/your/pkcs11.so"
@@ -27,6 +28,7 @@ lib-path = "/usr/lib64/pkcs11/yubihsm_pkcs11.so"
 # Settings related to the KMIP TCP+TLS interface offered by kmip2pkcs11 to
 # clients.
 [server]
+
 # The network address and port to listen on for incoming KMIP requests.
 addr = "127.0.0.1:5696"
 
@@ -34,8 +36,8 @@ addr = "127.0.0.1:5696"
 # Optional path to ia TLS certificate and key to use (in PEM format).
 # When NOT specified a self-signed TLS certificate will be generated
 # automatically.
-#cert_path = "/path/to/cert/file"
-#key_path = "/path/to/key/file"
+#cert-path = "/path/to/cert/file"
+#key-path = "/path/to/key/file"
 
 # Settings relevant to any daemon program.
 #[daemon]
@@ -65,7 +67,7 @@ addr = "127.0.0.1:5696"
 #
 #   This option is only supported on UNIX systems.
 #
-# NOTE: When using systemd, 'syslog' and 'stdout' are the most reliable options.
+# NOTE: When using systemd, 'syslog' and 'stderr' are the most reliable options.
 # systemd environments are often heavily isolated, making file-based logging
 # difficult.
 #log-target = { type = "stderr" }

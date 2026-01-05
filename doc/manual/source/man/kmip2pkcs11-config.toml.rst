@@ -142,7 +142,7 @@ PKCS#11 settings
 
 The ``[pkcs11]`` section.
 
-KMIP TCP server settings.
+KMIP server TCP settings.
 +++++++++++++++++++++++++
 
 The ``[server]`` section.
@@ -151,7 +151,9 @@ The ``[server]`` section.
 
     The network address and port to listen on for incoming KMIP TLS requests.
 
-The ```[server.identity]`` section.
+KMIP server TLS settings.
+
+The ``[server.identity]`` section.
 
 .. option:: cert_path = "/path/to/cert/file"
 .. option:: key_path = "/path/to/key/file"

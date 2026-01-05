@@ -391,6 +391,7 @@ dependencies = [
 [[package]]
 name = "daemonbase"
 version = "0.1.4"
+source = "git+https://github.com/NLnetLabs/daemonbase?branch=more-pub#534c72f87972ffdf5893a6233a1e332b71c91bcf"
 dependencies = [
  "chrono",
  "clap",

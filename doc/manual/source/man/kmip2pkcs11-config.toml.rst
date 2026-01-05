@@ -25,12 +25,11 @@ Example
     lib-path = "/path/to/your/pkcs11.so"
 
     [server]
-    log_target = "syslog"
-    log_facility = "daemon"
-    log_fileB = "/var/log/kmip2pkcs11-relay.log"
-    log_level = "info"
-    addr = "127.0.0.1"
-    port = 5696
+    addr = "127.0.0.1:5696"
+
+    [server.identity]
+    cert = "/path/to/cert.pem"
+    key = "/path/to/key.pem"
 
 Options
 -------

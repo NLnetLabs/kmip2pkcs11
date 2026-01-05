@@ -135,7 +135,7 @@ impl clap::builder::TypedValueParser for LogTargetParser {
     fn possible_values(
         &self,
     ) -> Option<Box<dyn Iterator<Item = clap::builder::PossibleValue> + '_>> {
-        let values = ["stdout", "stderr", "file:<PATH>", "syslog"];
+        let values = ["stderr", "file:<PATH>", "syslog"];
         Some(Box::new(values.into_iter().map(PossibleValue::new)))
     }
 }

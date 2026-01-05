@@ -50,8 +50,6 @@ Global Options
 
     The PKCS#11 module to use to communicate with an HSM. (REQUIRED)
 
-    .. todo:: Set this to the actual path to the PKCS#11 module to use.
-
 Settings relevant to any deamon program.
 ++++++++++++++++++++++++++++++++++++++++
 

@@ -57,6 +57,11 @@ fn main() -> Result<(), ExitError> {
         .inspect_err(|err| error!("Invalid configuration file: {err}"))
         .map_err(|_| Failed)?;
 
+    if matches.get_flag("check_config") {
+        // The configuration was loaded successfully; stop now.
+        return Ok(());
+    }
+
     // Merge the command-line arguments into the config file.
     args.merge(&mut config);
 

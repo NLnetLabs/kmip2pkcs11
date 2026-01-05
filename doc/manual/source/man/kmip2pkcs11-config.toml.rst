@@ -7,7 +7,7 @@ the option's format.
 
 .. Note::
 
-   ``kmip2pkcs11`` must be restarted for config file changes to take effect.
+   **kmip2pkcs11** must be restarted for config file changes to take effect.
 
 Example
 -------
@@ -102,7 +102,7 @@ The ``[daemon]`` section.
    - Dropping administrator privileges
 
    These features may be provided by an external system service manager, such
-   as systemd.  If no such service manager is being used, kmip2pkcs11 can
+   as systemd.  If no such service manager is being used, **kmip2pkcs11** can
    provide such features itself, by setting this option to ``true``.  This
    will also enable the ``pid-file`` and ``identity`` settings (although they
    remain optional).
@@ -112,7 +112,7 @@ The ``[daemon]`` section.
    where files are looked for. Use absolute path names in configuration
    to avoid ambiguities.
 
-.. TODO: Link to a dedicated systemd / daemonization guide for kmip2pkcs11.
+.. TODO: Link to a dedicated systemd / daemonization guide for **kmip2pkcs11**.
 
 .. option:: pid-file = "/var/run/kmip2pkcs11.pid"
 
@@ -126,9 +126,9 @@ The ``[daemon]`` section.
 
    An identity (user and group) to assume after startup.
 
-   kmip2pkcs11 will assume the specified identity after initialization.  Note that
-   this will fail if kmip2pkcs11 is started without administrator privileges.  This
-   option is only supported if ``daemonize`` is ``true``.
+   **kmip2pkcs11** will assume the specified identity after initialization.
+   Note that this will fail if kmip2pkcs11 is started without administrator
+   privileges.  This option is only supported if ``daemonize`` is ``true``.
 
    The identity must be specified as ``<user>:<group>``. Numeric IDs are also
    supported.
@@ -171,7 +171,7 @@ Files
 -----
 
 /etc/kmip2pkcs11/config.toml
-    Default kmip2pkcs11 config file
+    Default **kmip2pkcs11** config file.
 
 See Also
 --------

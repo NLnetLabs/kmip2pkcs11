@@ -1,4 +1,23 @@
-use std::path::{Path, PathBuf};
+//! Configuring kmip2pkcs11.
+//!
+//! This module defines configuration data types that match as closely as
+//! possible the types and related TOML syntax used by Cascade, as kmip2pkcs11
+//! is provided as a companion tool to Cascade and it is thus of benefit to
+//! users of Cascade if the configuration interface offered by the two tools
+//! is as similar as we can make it.
+//!
+//! Code re-use from Cascade is currently limited, instead types have been
+//! reproduced in similar form here. Partly this difference is because the two
+//! tools have distinct purposes, configuration needs and thus overlapping but
+//! not identifical configuration settings. And partly it's because we build on
+//! daemonbase while Cascade does not. It would be nice in future if we can
+//! reduce these differences where applicable, but that would require making
+//! daemonbase less proscriptive in how it is intended to be used so that it
+//! can be fit into Cascade.
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    path::{Path, PathBuf},
+};
 
 use daemonbase::{
     config::ConfigPath,
@@ -7,31 +26,66 @@ use daemonbase::{
 use serde::{Deserialize, Serialize};
 use tracing::level_filters::LevelFilter;
 
-//-------- LogConfig ---------------------------------------------------------
+//-------- Config ------------------------------------------------------------
 
+/// Configuration for kmip2pkcs11.
+// Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L27
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
+    /// Daemon-related configuration.
+    #[serde(default)]
     pub daemon: DaemonConfig,
 
+    /// Settings required to load and use the customer provided PKCS#11 module.
     pub pkcs11: Pkcs11Config,
 
+    /// The configuration of the KMIP TCP+TLS server.
+    #[serde(default)]
     pub server: ServerConfig,
 }
 
+impl Config {
+    /// Creates a configuration from a bytes slice with TOML data.
+    pub fn from_toml(
+        slice: &str,
+        base_dir: Option<impl AsRef<Path>>,
+    ) -> Result<Self, toml::de::Error> {
+        if let Some(ref base_dir) = base_dir {
+            ConfigPath::set_base_path(base_dir.as_ref().into())
+        }
+        let res = toml::de::from_str(slice);
+        ConfigPath::clear_base_path();
+        res
+    }
+
+    /// Creates a configuration from a configuration file.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
+        let toml_str = std::fs::read_to_string(path).unwrap();
+        Self::from_toml(&toml_str, None::<PathBuf>).map_err(|err| err.to_string())
+    }
+}
+
+//-------- LoggingConfig -----------------------------------------------------
+
+/// Logging configuration for kmip2pkcs11.
+// Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L193
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct LogConfig {
+pub struct LoggingConfig {
+    /// The minimum severity of messages to log.
     #[serde(default)]
-    pub log_level: LogLevel,
+    pub level: LogLevel,
 
+    /// Where to log messages to.
     #[serde(default)]
-    pub log_target: LogTarget,
+    pub target: LogTarget,
 }
 
 //-------- LogTarget ---------------------------------------------------------
 
 /// A logging target.
+// Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L397
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum LogTarget {
@@ -54,6 +108,7 @@ pub enum LogTarget {
 //-------- LogLevel ----------------------------------------------------------
 
 /// A logging level.
+// Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L353
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum LogLevel {
@@ -92,6 +147,8 @@ impl From<LogLevel> for LevelFilter {
 
 //-------- Pkcs11Config ------------------------------------------------------
 
+/// Configuration settings required for kmip2pkcs11 to be able to load and use
+/// a customer supplied PKCS#11 module.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Pkcs11Config {
@@ -99,12 +156,16 @@ pub struct Pkcs11Config {
     pub lib_path: PathBuf,
 }
 
+//-------- DaemonConfig ------------------------------------------------------
+
+/// Daemon-related configuration for kmip2pkcs11.
+// Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L152
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct DaemonConfig {
     /// The logging configuration.
     #[serde(flatten)]
-    pub log: LogConfig,
+    pub log: LoggingConfig,
 
     /// Whether kmip2pkcs11 should fork on startup.
     #[serde(default)]
@@ -123,72 +184,50 @@ pub struct DaemonConfig {
     pub identity: Option<(UserId, GroupId)>,
 }
 
+//-------- ServerConfig ------------------------------------------------------
+
+/// Configuration for the KMIP TCP+TLS server.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ServerConfig {
-    pub listen_socket: ListenSocket,
+    /// The TCP socket address to listen on.
+    #[serde(default = "default_server_addr")]
+    pub addr: SocketAddr,
 
-    pub identity: ServerIdentity,
+    /// The (optional) TLS certificate to use.
+    ///
+    /// If not specified a self-signed certificate will be generated.
+    #[serde(default)]
+    pub identity: Option<ServerIdentity>,
 }
 
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            addr: default_server_addr(),
+            identity: None,
+        }
+    }
+}
+
+/// By default listen for incoming KMIP TCP connections on localhost port 5696
+/// as defined by the KMIP specification and registered with IANA.
+///
+/// See:
+///   - http://docs.oasis-open.org/kmip/profiles/v1.2/kmip-profiles-v1.2.html#_Toc409613170
+///   - https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml?search=kmip
+fn default_server_addr() -> SocketAddr {
+    SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 5696)
+}
+
+/// TLS certificate and corresponding private key for use with the KMIP
+/// TCP+TLS server.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ServerIdentity {
     /// Path to the server certificate file in PEM format.
-    #[serde(default)]
-    pub cert_path: Option<PathBuf>,
+    pub cert_path: PathBuf,
 
     /// Path to the server certificate key file in PEM format
-    #[serde(default)]
-    pub key_path: Option<PathBuf>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct ListenSocket {
-    /// IP address or hostname to listen on
-    #[serde(default = "default_listen_addr")]
-    pub addr: String,
-
-    /// TCP port to listen on.
-    #[serde(default = "default_listen_port")]
-    pub port: u16,
-}
-
-impl Default for ListenSocket {
-    fn default() -> Self {
-        Self {
-            addr: default_listen_addr(),
-            port: default_listen_port(),
-        }
-    }
-}
-
-fn default_listen_addr() -> String {
-    "localhost".to_string()
-}
-
-fn default_listen_port() -> u16 {
-    5696
-}
-
-impl Config {
-    /// Creates a configuration from a bytes slice with TOML data.
-    pub fn from_toml(
-        slice: &str,
-        base_dir: Option<impl AsRef<Path>>,
-    ) -> Result<Self, toml::de::Error> {
-        if let Some(ref base_dir) = base_dir {
-            ConfigPath::set_base_path(base_dir.as_ref().into())
-        }
-        let res = toml::de::from_str(slice);
-        ConfigPath::clear_base_path();
-        res
-    }
-
-    /// Creates a configuration from a configuration file.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
-        let toml_str = std::fs::read_to_string(path).unwrap();
-        Self::from_toml(&toml_str, None::<PathBuf>).map_err(|err| err.to_string())
-    }
+    pub key_path: PathBuf,
 }

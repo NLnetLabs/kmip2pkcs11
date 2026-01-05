@@ -72,10 +72,10 @@ impl Args {
     /// Merge this into a [`Config`].
     pub fn merge(self, config: &mut Config) {
         if let Some(level) = self.log_level {
-            config.daemon.log.log_level = level;
+            config.daemon.log.level = level;
         }
         if let Some(target) = self.log_target {
-            config.daemon.log.log_target = target;
+            config.daemon.log.target = target;
         }
         if self.daemonize {
             config.daemon.daemonize = true;

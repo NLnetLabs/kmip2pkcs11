@@ -60,14 +60,14 @@ fn main() -> Result<(), ExitError> {
     // Merge the command-line arguments into the config file.
     args.merge(&mut config);
 
-    let level_filter = match config.daemon.log.log_level {
+    let level_filter = match config.daemon.log.level {
         LogLevel::Trace => daemonbase::logging::LevelFilter::Trace,
         LogLevel::Debug => daemonbase::logging::LevelFilter::Debug,
         LogLevel::Info => daemonbase::logging::LevelFilter::Info,
         LogLevel::Warning => daemonbase::logging::LevelFilter::Warn,
         LogLevel::Error => daemonbase::logging::LevelFilter::Error,
     };
-    let log_target = match &config.daemon.log.log_target {
+    let log_target = match &config.daemon.log.target {
         LogTarget::File(path) => Target::File(path.to_path_buf()),
         LogTarget::Syslog => Target::Syslog(Facility::LOG_DAEMON),
         LogTarget::Stderr => Target::Stderr,
@@ -118,12 +118,12 @@ fn main() -> Result<(), ExitError> {
         .unwrap();
 
     runtime.block_on(async move {
-        // Use the socket supplied by SystemD in preference to the config file
+        // Use the socket supplied by systemd in preference to the config file
         // defined address and port.
         let listener =
             if let Ok(Some(std_listener)) = listenfd::ListenFd::from_env().take_tcp_listener(0) {
                 info!(
-                    "Listening on SystemD supplied socket at {}",
+                    "Listening on systemd supplied socket at {}",
                     std_listener
                         .local_addr()
                         .map(|addr| addr.to_string())
@@ -133,34 +133,25 @@ fn main() -> Result<(), ExitError> {
                 // See: https://docs.rs/tokio/latest/tokio/net/struct.TcpListener.html#notes
                 std_listener.set_nonblocking(true)
                     .inspect_err(|err| {
-                        error!("Unable to set listener received from SystemD into non-blocking mode: {err}")
+                        error!("Unable to set listener received from systemd into non-blocking mode: {err}")
                     })
                     .map_err(|_| ExitError::default())?;
-                let tokio_listener = TcpListener::from_std(std_listener)
+                TcpListener::from_std(std_listener)
                     .inspect_err(|err| {
-                        error!("Unable to convert listener received from SystemD into a Tokio TcpListener: {err}")
+                        error!("Unable to convert listener received from systemd into a Tokio TcpListener: {err}")
                     })
-                    .map_err(|_| ExitError::default())?;
-                tokio_listener
             } else {
-                info!(
-                    "Listening on {}:{}",
-                    config.server.listen_socket.addr, config.server.listen_socket.port
-                );
-                let listener = TcpListener::bind(format!(
-                    "{}:{}",
-                    config.server.listen_socket.addr, config.server.listen_socket.port
-                ))
+                info!("Listening on {}", config.server.addr);
+                TcpListener::bind(config.server.addr)
                 .await
                 .inspect_err(|err| {
                     error!(
-                        "TCP fatal error while attempting to bind to {}:{}: {err}",
-                        config.server.listen_socket.addr, config.server.listen_socket.port
+                        "TCP fatal error while attempting to bind to {}: {err}",
+                        config.server.addr
                     )
                 })
-                .map_err(|_| ExitError::default())?;
-                listener
-            };
+            }
+            .map_err(|_| ExitError::default())?;
 
         // TODO: This doesn't log at info/debug/trace level what it is doing
         // unless it fails. We also can't log ourselves if we think privileges
@@ -225,13 +216,13 @@ fn improve_pkcs11_finalize_err(config: &Config, err: pkcs11::error::Error) -> pk
 }
 
 fn load_or_generate_server_identity_cert(
-    server_identity: ServerIdentity,
+    server_identity: Option<ServerIdentity>,
 ) -> Result<(Vec<CertificateDer<'static>>, PrivateKeyDer<'static>), ExitError> {
     match server_identity {
-        ServerIdentity {
-            cert_path: Some(cert_path),
-            key_path: Some(key_path),
-        } => {
+        Some(ServerIdentity {
+            cert_path,
+            key_path,
+        }) => {
             info!(
                 "Loading server identity certificate '{}' and key '{}'",
                 cert_path.display(),
@@ -245,7 +236,7 @@ fn load_or_generate_server_identity_cert(
             Ok((certs, key))
         }
 
-        _ => {
+        None => {
             warn!("Generating self-signed server identity certificate");
             let CertifiedKey { cert, signing_key } =
                 generate_simple_self_signed(vec!["localhost".to_string()]).unwrap();

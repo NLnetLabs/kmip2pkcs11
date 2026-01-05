@@ -20,7 +20,7 @@ Example
     log-level = "info"
     log-target = { type = "syslog" }
     daemonize = true
-    pid_file = "/var/run/kmip2pkcs11.pid"
+    pid-file = "/var/run/kmip2pkcs11.pid"
     identity = "kmip2pkcs11:kmip2pkcs11"
 
     [pkcs11]
@@ -30,8 +30,8 @@ Example
     addr = "127.0.0.1:5696"
 
     [server.identity]
-    cert = "/path/to/cert.pem"
-    key = "/path/to/key.pem"
+    cert-path = "/path/to/cert.pem"
+    key-path = "/path/to/key.pem"
 
 Options
 -------
@@ -160,8 +160,8 @@ KMIP server TLS settings.
 
 The ``[server.identity]`` section.
 
-.. option:: cert_path = "/path/to/cert/file"
-.. option:: key_path = "/path/to/key/file"
+.. option:: cert-path = "/path/to/cert/file"
+.. option:: key-path = "/path/to/key/file"
 
     Optional path to a TLS certificate and key to use (in PEM format).
     

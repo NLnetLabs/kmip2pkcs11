@@ -70,7 +70,7 @@ The ``[daemon]`` section.
 
 .. option:: log-target = { type = "stderr" }
 .. option:: log-target = { type = "syslog" }
-.. option:: log-target = { type = "file", path = "cascaded.log" }
+.. option:: log-target = { type = "file", path = "kmip2pkcs11.log" }
 
    The location the daemon writes logs to.
 
@@ -113,7 +113,7 @@ The ``[daemon]`` section.
    where files are looked for. Use absolute path names in configuration
    to avoid ambiguities.
 
-.. TODO: Link to a dedicated systemd / daemonization guide for Cascade.
+.. TODO: Link to a dedicated systemd / daemonization guide for kmip2pkcs11.
 
 .. option:: pid-file = "/var/run/kmip2pkcs11.pid"
 

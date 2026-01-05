@@ -151,10 +151,6 @@ pub struct DaemonConfig {
     #[serde(default)]
     pub pid_file: Option<PathBuf>,
 
-    /// The directory to chroot into after startup.
-    #[serde(default)]
-    pub chroot: Option<PathBuf>,
-
     /// The identity to assume after startup.
     #[serde(default)]
     pub identity: Option<(UserId, GroupId)>,

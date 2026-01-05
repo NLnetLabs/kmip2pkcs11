@@ -84,9 +84,11 @@ fn main() -> Result<(), ExitError> {
             if let Some(file) = &config.daemon.pid_file {
                 process_config = process_config.with_pid_file(file.clone().into());
             }
-            if let Some(path) = &config.daemon.chroot {
-                process_config = process_config.with_chroot(path.clone().into());
-            }
+            // Commented out as not yet verified as working and paths may need
+            // to be manipulated in order for chroot to work.
+            // if let Some(path) = &config.daemon.chroot {
+            //     process_config = process_config.with_chroot(path.clone().into());
+            // }
             if let Some((user, group)) = &config.daemon.identity {
                 process_config = process_config
                     .with_user_id(user.clone())

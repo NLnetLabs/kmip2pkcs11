@@ -137,10 +137,12 @@ The ``[daemon]`` section.
    .. NOTE:: When using systemd, you should rely on its 'User=' and 'Group='
        options instead.  See <https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#User=>.
 
-PKCS#11 settings
-++++++++++++++++
+
+PKCS#11 settings.
++++++++++++++++++
 
 The ``[pkcs11]`` section.
+
 
 KMIP server TCP settings.
 +++++++++++++++++++++++++
@@ -151,7 +153,9 @@ The ``[server]`` section.
 
     The network address and port to listen on for incoming KMIP TLS requests.
 
+
 KMIP server TLS settings.
++++++++++++++++++++++++++
 
 The ``[server.identity]`` section.
 

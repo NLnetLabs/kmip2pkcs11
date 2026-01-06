@@ -25,10 +25,10 @@ version = "v1"
 
 # Settings related to the KMIP TCP+TLS interface offered by kmip2pkcs11 to
 # clients.
-[server]
+#[server]
 
 # The network address and port to listen on for incoming KMIP requests.
-addr = "127.0.0.1:5696"
+#addr = "127.0.0.1:5696"
 
 #[server.identity]
 # Optional path to ia TLS certificate and key to use (in PEM format).

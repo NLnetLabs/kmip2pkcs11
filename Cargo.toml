@@ -1,147 +1,119 @@
 [workspace]
-  resolver = "3"
-  members = [".", "crates/cfg"]
-  default-members = [".", "crates/cfg"]
+resolver        = "3"
+members         = [".", "crates/cfg"]
+default-members = [".", "crates/cfg"]
 
 [workspace.package]
-  authors = ["NLnet Labs <rust-team@nlnetlabs.nl>"]
-  repository = "https://github.com/NLnetLabs/kmip2pkcs11/"
-  license = "BSD-3-Clause"
-  version = "0.1.0-alpha"
-  edition = "2024"
+authors    = ["NLnet Labs <rust-team@nlnetlabs.nl>"]
+repository = "https://github.com/NLnetLabs/kmip2pkcs11/"
+license    = "BSD-3-Clause"
+version    = "0.1.0-alpha"
+edition    = "2024"
 
 [workspace.dependencies]
-  clap = { version = "4.5", features = ["cargo", "derive"] }
-  daemonbase = { version = "0.1.4", git = "https://github.com/NLnetLabs/daemonbase", branch = "more-pub" }
-  tracing = { version = "0.1" }
+clap       = { version = "4.5", features = ["cargo", "derive"] }
+daemonbase = { version = "0.1.4", git = "https://github.com/NLnetLabs/daemonbase", branch = "more-pub" }
+tracing    = { version = "0.1" }
 
 [package]
-  name = "kmip2pkcs11"
-  description = "A KMIP to PKCS#11 relay."
-  keywords = ["KMIP", "PKCS#11", "HSM", "Rust"]
-  categories = ["cryptography"]
-  readme = "README.md"
-  exclude = [".github", ".gitignore"]
-  authors.workspace = true
-  repository.workspace = true
-  license.workspace = true
-  version.workspace = true
-  edition.workspace = true
+name                 = "kmip2pkcs11"
+description          = "A KMIP to PKCS#11 relay."
+keywords             = ["KMIP", "PKCS#11", "HSM", "Rust"]
+categories           = ["cryptography"]
+readme               = "README.md"
+exclude              = [".github", ".gitignore"]
+authors.workspace    = true
+repository.workspace = true
+license.workspace    = true
+version.workspace    = true
+edition.workspace    = true
 
 [dependencies]
-  bcder = "0.7.5"
-  clap = { workspace = true }
-  cryptoki = "^0.10.0"
-  daemonbase = { workspace = true }
-  domain = { git = "https://github.com/NLnetLabs/domain.git", branch = "patches-for-nameshed-prototype", features = [
-    "unstable-crypto-sign",
-  ] }
-  hex = "0.4"
-  kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", version = "0.4.0", default-features = false, features = [
-    "async-with-tokio",
-    "high-level",
-  ] }
-  kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
-    "tls-with-tokio-rustls",
-  ] }
-  kmip2pkcs11-cfg = { path = "crates/cfg" }
-  listenfd = "1.0.2"
-  tracing = { workspace = true }
-  moka = { version = "0.12.10", features = ["sync"] }
-  r2d2 = "0.8.10"
-  rand = "0.9.2"
-  rcgen = { version = "0.14.3", optional = true }
-  rpki = { version = "0.18", features = ["crypto"] }
-  tokio = { version = "1.47.1", features = [
-    "macros",
-    "net",
-    "rt-multi-thread",
-  ] }
-  rustls = "0.23.31"
-  serde = { version = "1.0.219", features = ["derive"] }
-  toml = "0.9.5"
-  tokio-rustls = "0.26.2"
+bcder = "0.7.5"
+clap = { workspace = true }
+cryptoki = "^0.10.0"
+daemonbase = { workspace = true }
+domain = { git = "https://github.com/NLnetLabs/domain.git", branch = "patches-for-nameshed-prototype", features = [
+  "unstable-crypto-sign",
+] }
+hex = "0.4"
+kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", version = "0.4.0", default-features = false, features = [
+  "async-with-tokio",
+  "high-level",
+] }
+kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
+  "tls-with-tokio-rustls",
+] }
+kmip2pkcs11-cfg = { path = "crates/cfg" }
+listenfd = "1.0.2"
+tracing = { workspace = true }
+moka = { version = "0.12.10", features = ["sync"] }
+r2d2 = "0.8.10"
+rand = "0.9.2"
+rcgen = { version = "0.14.3", optional = true }
+rpki = { version = "0.18", features = ["crypto"] }
+tokio = { version = "1.47.1", features = ["macros", "net", "rt-multi-thread"] }
+rustls = "0.23.31"
+serde = { version = "1.0.219", features = ["derive"] }
+toml = "0.9.5"
+tokio-rustls = "0.26.2"
 
 [features]
-  default = ["domain/ring", "rcgen"]
-  openssl = ["domain/openssl"]
+default = ["domain/ring", "rcgen"]
+openssl = ["domain/openssl"]
 
 [profile.release]
-  panic = "abort"
+panic = "abort"
 
 [package.metadata.deb]
-  assets = [
-    [
-      "target/release/kmip2pkcs11",
-      "usr/bin/",
-      "755",
-    ],
-    [
-      "README.md",
-      "usr/share/doc/kmip2pkcs11/",
-      "644",
-    ],
-    [
-      "doc/manual/build/man/kmip2pkcs11.1",
-      "usr/share/man/man1/kmip2pkcs11.1",
-      "644",
-    ],
-    [
-      "doc/manual/build/man/kmip2pkcs11-config.toml.5",
-      "usr/share/man/man5/kmip2pkcs11-config.toml.5",
-      "644",
-    ],
-    [
-      "etc/config.toml.system-service",
-      "etc/kmip2pkcs11/config.toml",
-      "644",
-    ],
-    [
-      "pkg/common/service.preset",
-      "usr/lib/systemd/service-preset/50-kmip2pkcs11.preset",
-      "644",
-    ],
-  ]
-  name = "kmip2pkcs11"
-  maintainer = "NLnet Labs <rust-team@nlnetlabs.nl>"
-  license-file = ["LICENSE", "0"]
-  extended-description = """\
+assets = [
+  ["target/release/kmip2pkcs11", "usr/bin/", "755"],
+  ["README.md","usr/share/doc/kmip2pkcs11/", "644"],
+  ["doc/manual/build/man/kmip2pkcs11.1", "usr/share/man/man1/kmip2pkcs11.1", "644"],
+  ["doc/manual/build/man/kmip2pkcs11-config.toml.5", "usr/share/man/man5/kmip2pkcs11-config.toml.5", "644"],
+  ["etc/config.toml.system-service", "etc/kmip2pkcs11/config.toml", "644"],
+  ["pkg/common/service.preset", "usr/lib/systemd/service-preset/50-kmip2pkcs11.preset", "644"],
+]
+name = "kmip2pkcs11"
+maintainer = "NLnet Labs <rust-team@nlnetlabs.nl>"
+license-file = ["LICENSE", "0"]
+extended-description = """\
 A relay for connecting OASIS KMIP compatible HSM clients to PKCS#11 compatible HSMs."""
-  depends = "$auto, adduser"
-  section = "net"
-  priority = "optional"
-  maintainer-scripts = "pkg/debian"
-  changelog = "target/debian/changelog" # this will be generated by the pkg workflow
-  copyright = "Copyright (c) 2025, NLnet Labs. All rights reserved."
-  conf-files = ["/etc/kmip2pkcs11/config.toml"]
-  systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = true } # usr-merge is needed for Bookworm/Noble and later
+depends = "$auto, adduser"
+section = "net"
+priority = "optional"
+maintainer-scripts = "pkg/debian"
+changelog = "target/debian/changelog" # this will be generated by the pkg workflow
+copyright = "Copyright (c) 2025, NLnet Labs. All rights reserved."
+conf-files = ["/etc/kmip2pkcs11/config.toml"]
+systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = true } # usr-merge is needed for Bookworm/Noble and later
 
 [package.metadata.deb.variants.debian-buster]
-  systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
+systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
 
 [package.metadata.deb.variants.debian-bullseye]
-  systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
+systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
 
 [package.metadata.deb.variants.ubuntu-focal]
-  systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
+systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
 
 [package.metadata.deb.variants.ubuntu-jammy]
-  systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
+systemd-units = { unit-name = "kmip2pkcs11", unit-scripts = "pkg/common", enable = false, usr-merge = false }
 
 [package.metadata.generate-rpm]
-  assets = [
-    { source = "target/release/kmip2pkcs11", dest = "/usr/bin/kmip2pkcs11", mode = "755" },
-    { source = "target/rpm/kmip2pkcs11.service", dest = "/lib/systemd/system/kmip2pkcs11.service", mode = "644" },
-    { source = "doc/manual/build/man/kmip2pkcs11.1", dest = "/usr/share/man/man1/kmip2pkcs11.1", mode = "644", doc = true },
-    { source = "doc/manual/build/man/kmip2pkcs11-config.toml.5", dest = "/usr/share/man/man5/kmip2pkcs11-config.toml.5", mode = "644", doc = true },
-    { source = "etc/config.toml.system-service", dest = "/etc/kmip2pkcs11/config.toml", mode = "644", config = true },
-    { source = "pkg/common/service.preset", dest = "/lib/systemd/system-preset/50-kmip2pkcs11.preset", mode = "644" },
-  ]
-  # These get set using cargo-generate-rpm --set-metadata at package build time.
-  #post_install_script = ...
-  #pre_uninstall_script = ...
-  #post_uninstall_script = ...
+assets = [
+  { source = "target/release/kmip2pkcs11", dest = "/usr/bin/kmip2pkcs11", mode = "755" },
+  { source = "target/rpm/kmip2pkcs11.service", dest = "/lib/systemd/system/kmip2pkcs11.service", mode = "644" },
+  { source = "doc/manual/build/man/kmip2pkcs11.1", dest = "/usr/share/man/man1/kmip2pkcs11.1", mode = "644", doc = true },
+  { source = "doc/manual/build/man/kmip2pkcs11-config.toml.5", dest = "/usr/share/man/man5/kmip2pkcs11-config.toml.5", mode = "644", doc = true },
+  { source = "etc/config.toml.system-service", dest = "/etc/kmip2pkcs11/config.toml", mode = "644", config = true },
+  { source = "pkg/common/service.preset", dest = "/lib/systemd/system-preset/50-kmip2pkcs11.preset", mode = "644" },
+]
+# These get set using cargo-generate-rpm --set-metadata at package build time.
+#post_install_script = ...
+#pre_uninstall_script = ...
+#post_uninstall_script = ...
 
 # ensure that the useradd and rsync tools are present by installing their respective packages
 [package.metadata.generate-rpm.requires]
-  shadow-utils = "*"
+shadow-utils = "*"

@@ -177,26 +177,21 @@ mod daemon_identity {
         }
     }
 
+    // Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/file/v1.rs#L317
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<(UserId, GroupId)>, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if let Some((user_id, group_id)) = s.split_once(':') {
-            let user_id = UserId::try_from(user_id.to_string()).map_err(|err| {
-                serde::de::Error::custom(format!("'{user_id}' is not a valid user ID: {err}"))
-            })?;
-            let group_id = GroupId::try_from(group_id.to_string()).map_err(|err| {
-                serde::de::Error::custom(format!("'{group_id}' is not a valid group ID: {err}"))
-            })?;
-            Ok(Some((user_id, group_id)))
-        } else if s.is_empty() {
-            Ok(None)
-        } else {
-            Err(serde::de::Error::custom(format!(
-                "'{s}' must be in the form 'user_id:group_id'"
-            )))
-        }
+        // Allow '<user>:<group>', or interpret the single value as both.
+        let (user_id, group_id) = s.split_once(':').unwrap_or((&s, &s));
+        let user_id = UserId::try_from(user_id.to_string()).map_err(|err| {
+            serde::de::Error::custom(format!("'{user_id}' is not a valid user ID: {err}"))
+        })?;
+        let group_id = GroupId::try_from(group_id.to_string()).map_err(|err| {
+            serde::de::Error::custom(format!("'{group_id}' is not a valid group ID: {err}"))
+        })?;
+        Ok(Some((user_id, group_id)))
     }
 }
 

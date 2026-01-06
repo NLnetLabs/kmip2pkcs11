@@ -1,3 +1,7 @@
+[![Discuss on Discourse](https://img.shields.io/badge/Discourse-NLnet_Labs-orange?logo=Discourse)](https://community.nlnetlabs.nl/c/dns-libraries-tools/12)
+[![Mastodon Follow](https://img.shields.io/mastodon/follow/114692612288811644?domain=social.nlnetlabs.nl&style=social)](https://social.nlnetlabs.nl/@nlnetlabs)
+
+
 > (!) _This project is at an experimental stage and is very much a work-in-progress. It should not be used in production deployments at this time. Furthermore the functionality and interfaces offered should be considered unstable._
 
 # A KMIP to PKCS#11 Relay

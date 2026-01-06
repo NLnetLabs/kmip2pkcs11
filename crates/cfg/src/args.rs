@@ -52,7 +52,7 @@ impl Args {
                 .short('d')
                 .long("daemonize")
                 .action(clap::ArgAction::SetTrue)
-                .help("Whether Cascade should fork on startup"),
+                .help("Whether kmip2pkcs11 should fork on startup"),
         ])
     }
 

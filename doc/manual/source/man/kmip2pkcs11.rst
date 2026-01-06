@@ -74,7 +74,7 @@ Files
 See Also
 --------
 
-https://kmip2pkcs11.docs.nlnetlabs.nl
+https://cascade.docs.nlnetlabs.nl/projects/kmip2pkcs11/
     **kmip2pkcs11** online documentation.
 
 **kmip2pkcs11-config.toml**\ (5)

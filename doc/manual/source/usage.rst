@@ -42,9 +42,7 @@ into the corresponding PKCS#11 request, then convert the PKCS#11 response to
 the corresponding KMIP response.
 
 Startup log output should look something like this: (with details of your
-PKCS#11 module and HSM, the Yubico output here is just an example)
-
-  .. code-block::
+PKCS#11 module and HSM, the Yubico output here is just an example)::
 
      [INFO] Loading and initializing PKCS#11 library /usr/lib64/pkcs11/yubihsm_pkcs11.so
      [INFO] Loaded Yubico (www.yubico.com) PKCS#11 library v2.70 supporting Cryptoki v3.1: YubiHSM PKCS#11 Library

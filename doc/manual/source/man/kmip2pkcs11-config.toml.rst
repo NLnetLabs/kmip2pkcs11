@@ -46,11 +46,6 @@ Global Options
    - ``v1``: This format.
 
 
-
-.. option:: lib-path = ""
-
-    The PKCS#11 module to use to communicate with an HSM. (REQUIRED)
-
 Settings relevant to any deamon program.
 ++++++++++++++++++++++++++++++++++++++++
 
@@ -143,6 +138,11 @@ PKCS#11 settings.
 +++++++++++++++++
 
 The ``[pkcs11]`` section.
+
+.. option:: lib-path = "/path/to/your/pkcs11/module.so"
+
+    The path to the PKCS#11 module (e.g. a .so file on Linux systems) to load
+    in order to communicate with an HSM. (REQUIRED)
 
 
 KMIP server TCP settings.

@@ -41,7 +41,7 @@ then wait for incoming KMIP TCP connections and convert supported requests
 into the corresponding PKCS#11 request, then convert the PKCS#11 response to
 the corresponding KMIP response.
 
-Startup log output should look something like this: (with details of your
+Startup log output should look something like this: (with details of YOUR
 PKCS#11 module and HSM, the Yubico output here is just an example)::
 
      [INFO] Loading and initializing PKCS#11 library /usr/lib64/pkcs11/yubihsm_pkcs11.so

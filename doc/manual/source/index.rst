@@ -76,10 +76,6 @@ on which it builds:
 - `rustls <https://crates.io/crates/rustls>`_
 - `tokio <https://crates.io/crates/tokio>`_
 
-The code of the `keyls <https://github.com/ximon18/keyls>`_ tool served as
-a very useful starting point as it already supported both KMIP and PKCS#11
-albeit only as a client and not as a server.
-
 Supported protocols
 -------------------
 

@@ -131,7 +131,18 @@ Supported operations
 Usage
 -----
 
-For the command line options, see :doc:`man/kmip2pkcs11`
+At a minimum you must specify in the configuration file the path to the
+PKCS#11 module to load.
+
+.. tip:
+
+   When installed via a package a sample configuration file should have been
+   created at ``/etc/kmip2pkcs11/config.toml`` which you can edit and use.
+
+Further reading:
+
+  - Read the configuration file documentation at :doc:`man/kmip2pkcs11-config.toml`.
+  - Learn about supported command line options at :doc:`man/kmip2pkcs11`.
 
 .. toctree::
    :maxdepth: 2

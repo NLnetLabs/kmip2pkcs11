@@ -64,12 +64,6 @@ PKCS#11 relay. However, at present and for the foreseeable future we plan only
 to implement the tiny fraction of the KMIP specification needed by the Cascade
 project, and the only KMIP client that will be tested against will be Cascade.
 
-However, the supported requests cover only the small fraction of the KMIP
-specification this application implements support for only a limited fraction
-of the entire interface defined by the applicable versions of the KMIP and
-PKCS#11 specifications, specifically whatever is needed to power our own
-projects.
-
 Technical foundations
 """""""""""""""""""""
 

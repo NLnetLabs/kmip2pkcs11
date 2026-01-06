@@ -4,9 +4,6 @@ Usage
 Prerequisites
 -------------
 
-- A PKCS#11 library and associated HSM to interact with, either a real
-  hardware device or a virtual HSM such as https://www.softhsm.org/.
-
 Before starting **kmip2pkcs11** you MUST specify in the configuration file the
 path to the PKCS#11 module to load. The module will communicate with your HSM,
 either a hardware device or a virtual HSM such as https://www.softhsm.org/.

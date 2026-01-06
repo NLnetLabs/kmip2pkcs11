@@ -99,9 +99,11 @@ Prerequisites
 Supported protocols
 -------------------
 
-This application currently only supports KMIP via the TCP+TLS+TTLV transport.
-There is no support for the HTTPS+XML or HTTPS+JSON transports defined by the
-KMIP profiles specification.
+This application currently only supports a subset of KMIP 1.2 via the
+TCP+TLS+TTLV transport. There is no support for the HTTPS+XML or HTTPS+JSON
+transports defined by the KMIP profiles specification.
+
+The loaded PKCS#11 module should conform to the PKCS#11 v2.40 specification.
 
 Supported operations
 --------------------

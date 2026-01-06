@@ -37,6 +37,12 @@ impl Config {
     }
 }
 
+impl From<v1::Config> for Config {
+    fn from(config: v1::Config) -> Self {
+        Self::V1(config)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

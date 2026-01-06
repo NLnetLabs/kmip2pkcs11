@@ -152,8 +152,52 @@ pub struct DaemonConfig {
     pub pid_file: Option<PathBuf>,
 
     /// The identity to assume after startup.
-    #[serde(default)]
+    #[serde(default, with = "daemon_identity")]
     pub identity: Option<(UserId, GroupId)>,
+}
+
+mod daemon_identity {
+    use daemonbase::process::{GroupId, UserId};
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(
+        identity: &Option<(UserId, GroupId)>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if let Some(identity) = identity {
+            let user_id = String::from(identity.0.clone());
+            let group_id = String::from(identity.1.clone());
+            let s = format!("{user_id}:{group_id}");
+            serializer.serialize_str(&s)
+        } else {
+            serializer.serialize_none()
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<(UserId, GroupId)>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        if let Some((user_id, group_id)) = s.split_once(':') {
+            let user_id = UserId::try_from(user_id.to_string()).map_err(|err| {
+                serde::de::Error::custom(format!("'{user_id}' is not a valid user ID: {err}"))
+            })?;
+            let group_id = GroupId::try_from(group_id.to_string()).map_err(|err| {
+                serde::de::Error::custom(format!("'{group_id}' is not a valid group ID: {err}"))
+            })?;
+            Ok(Some((user_id, group_id)))
+        } else if s.is_empty() {
+            Ok(None)
+        } else {
+            Err(serde::de::Error::custom(format!(
+                "'{s}' must be in the form 'user_id:group_id'"
+            )))
+        }
+    }
 }
 
 //-------- ServerConfig ------------------------------------------------------

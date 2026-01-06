@@ -179,8 +179,8 @@ Files
 See Also
 --------
 
-https://kmip2pkcs11.docs.nlnetlabs.nl
-    kmip2pkcs11 online documentation
+https://cascade.docs.nlnetlabs.nl/projects/kmip2pkcs11/
+    **kmip2pkcs11** online documentation.
 
 **kmip2pkcs11**\ (1)
     :doc:`kmip2pkcs11`

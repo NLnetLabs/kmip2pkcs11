@@ -31,7 +31,7 @@ version = "v1"
 #addr = "127.0.0.1:5696"
 
 #[server.identity]
-# Optional path to ia TLS certificate and key to use (in PEM format).
+# Optional path to a TLS certificate and key to use (in PEM format).
 # When NOT specified a self-signed TLS certificate will be generated
 # automatically.
 #cert-path = "/path/to/cert/file"

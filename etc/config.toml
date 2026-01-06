@@ -49,7 +49,7 @@ addr = "127.0.0.1:5696"
 # - 'info': Things are proceeding as expected.
 # - 'warning': Something does not appear to be correct.
 # - 'error': Something went wrong (but kmip2pkcs11 can recover).
-#log-level = "info"
+#log-level = "warning"
 
 # The location the daemon writes logs to.
 #

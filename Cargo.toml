@@ -68,7 +68,7 @@ panic = "abort"
 [package.metadata.deb]
 assets = [
   ["target/release/kmip2pkcs11", "usr/bin/", "755"],
-  ["README.md","usr/share/doc/kmip2pkcs11/", "644"],
+  ["README.md", "usr/share/doc/kmip2pkcs11/", "644"],
   ["doc/manual/build/man/kmip2pkcs11.1", "usr/share/man/man1/kmip2pkcs11.1", "644"],
   ["doc/manual/build/man/kmip2pkcs11-config.toml.5", "usr/share/man/man5/kmip2pkcs11-config.toml.5", "644"],
   ["etc/config.toml.system-service", "etc/kmip2pkcs11/config.toml", "644"],

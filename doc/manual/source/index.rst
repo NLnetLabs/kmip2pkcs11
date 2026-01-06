@@ -86,16 +86,6 @@ The code of the `keyls <https://github.com/ximon18/keyls>`_ tool served as
 a very useful starting point as it already supported both KMIP and PKCS#11
 albeit only as a client and not as a server.
 
-Prerequisites
--------------
-
-- A TLS certificate and key such as the example ones available here:
-  https://github.com/rustls/hyper-rustls/blob/main/examples/. Note: This
-  application may be updated in future to use a pre-shared key approach instead.
-
-- A PKCS#11 library and associated HSM to interact with, either a real
-  hardware device or a virtual HSM such as https://www.softhsm.org/.
-
 Supported protocols
 -------------------
 

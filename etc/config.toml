@@ -20,9 +20,7 @@ version = "v1"
 
 # The PKCS#11 module to use to communicate with an HSM.
 # TODO: Set this to the actual path to the PKCS#11 module to use.
-#lib_path = "/path/to/your/pkcs11.so"
-#lib_path = "/usr/safenet/lunaclient/lib/libCryptoki2_64.so"
-lib-path = "/usr/lib64/pkcs11/yubihsm_pkcs11.so"
+lib_path = "/path/to/your/pkcs11/module.so"
 
 
 # Settings related to the KMIP TCP+TLS interface offered by kmip2pkcs11 to

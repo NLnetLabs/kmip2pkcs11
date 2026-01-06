@@ -5,6 +5,7 @@ use kmip::types::{
     response::ProtocolVersion,
     response::{
         BatchItem as ResBatchItem, ResponseHeader, ResponseMessage, ResultReason, ResultStatus,
+        Timestamp,
     },
 };
 use log::error;
@@ -25,14 +26,12 @@ pub fn mk_response(batch_items: Vec<ResBatchItem>) -> Vec<u8> {
     let epoch_time_now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()
-        .as_secs()
-        .try_into()
-        .unwrap();
+        .as_secs();
 
     let mut res = ResponseMessage {
         header: ResponseHeader {
             protocol_version: ProtocolVersion { major: 1, minor: 2 },
-            timestamp: epoch_time_now,
+            timestamp: Timestamp::from_u64(epoch_time_now),
             batch_count: batch_items.len().try_into().unwrap(),
         },
         batch_items,

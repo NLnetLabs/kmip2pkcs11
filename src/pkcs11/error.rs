@@ -82,6 +82,21 @@ impl Error {
     pub fn unsupported_cryptographic_parameters(err: impl ToString) -> Self {
         Self::UnsupportedCryptographicParameters(err.to_string())
     }
+
+    /// Create an error for unsupported operations or features.
+    pub fn not_supported(what: &str) -> Self {
+        Self::UnsupportedCryptographicParameters(format!("{} is not supported", what))
+    }
+
+    /// Create an error for internal failures.
+    pub fn internal(msg: &str) -> Self {
+        Self::UnusableConfig(format!("Internal error: {}", msg))
+    }
+
+    /// Create an error for invalid parameters.
+    pub fn invalid_param(msg: &str) -> Self {
+        Self::MalformedDataReceived(msg.to_string())
+    }
 }
 
 impl From<cryptoki::error::Error> for Error {

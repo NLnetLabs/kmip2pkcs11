@@ -23,7 +23,9 @@ kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", v
   "async-with-tokio",
   "high-level",
 ] }
-kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
+# Use patched kmip-protocol with TimeStamp support for OpenBao compatibility
+# See: https://github.com/NLnetLabs/kmip-protocol/pull/42
+kmip = { git = "https://github.com/neutron37/kmip-protocol", branch = "feature/timestamp-support", package = "kmip-protocol", default-features = false, features = [
   "tls-with-tokio-rustls",
 ] }
 log = "0.4"

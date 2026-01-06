@@ -19,9 +19,8 @@ version = "v1"
 [pkcs11]
 
 # The PKCS#11 module to use to communicate with an HSM.
-# TODO: Set this to the actual path to the PKCS#11 module to use.
+# TODO: Uncomment and set this to the actual path to the PKCS#11 module to use.
 #lib-path = "/path/to/your/pkcs11/module.so"
-lib-path = "/usr/lib64/pkcs11/yubihsm_pkcs11.so"
 
 
 # Settings related to the KMIP TCP+TLS interface offered by kmip2pkcs11 to

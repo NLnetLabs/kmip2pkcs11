@@ -100,8 +100,8 @@ fn main() -> Result<(), ExitError> {
             // See: https://github.com/tokio-rs/tokio/issues/4301
             process.setup_daemon(config.daemon.daemonize)?;
 
-            // Drop privileges before or after initializing the PKCS#11 library as it
-            // may spawn threads which should not be done prior to forking.
+            // Initialize the PKCS#11 library after forking as it may spawn
+            // threads which should not be done prior to forking.
             info!(
                 "Loading and initializing PKCS#11 library {}",
                 config.pkcs11.lib_path.display()

@@ -97,6 +97,9 @@ version = "v1"
 
 # An identity (user and group) to assume after startup.
 #
+# If not specified the identity will be that of the launching user, i.e. will
+# not be changed.
+#
 # kmip2pkcs11 will assume the specified identity after initialization.  Note that
 # this will fail if kmip2pkcs11 is started without administrator privileges.  This
 # option is only supported if 'daemonize' is 'true'.

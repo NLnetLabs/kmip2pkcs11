@@ -167,7 +167,9 @@ fn main() -> Result<(), ExitError> {
                 // unless it fails. We also can't log ourselves if we think privileges
                 // will be dropped because the args.process member fields are not visible
                 // to us.
-                process.drop_privileges()?;
+                if config.daemon.daemonize {
+                    process.drop_privileges()?;
+                }
 
                 loop {
                     let Ok((stream, peer_addr)) = listener

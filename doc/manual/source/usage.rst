@@ -27,8 +27,8 @@ Please consult the documentation for your PKCS#11 module to determine what
 setup is required.
 
 Once the configuration file has been correctly setup you can launch
-**kmip2pkcs11**, no command line arguments are required. Either launch it as
-the correct user that has the necessary access rights required by your PKCS#11
+``kmip2pkcs11 --config /path/to/your/config/file``. Either launch it as the
+correct user that has the necessary access rights required by your PKCS#11
 module, or launch it as root and configure it to change user and group to
 become the required user and group immediately after startup.
 

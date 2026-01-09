@@ -1,30 +1,31 @@
 # Configuration for kmip2pkcs11 when run as a system service.
 # ============================================================================
 
+version = "v1"
+
+[pkcs11]
 # The PKCS#11 module to use to communicate with an HSM.
-# TODO: Set this to the actual path to the PKCS#11 module to use.
-lib_path = "/path/to/your/pkcs11.so"
+# TODO: Uncomment and set this to the actual path to the PKCS#11 module to use.
+#lib-path = "/path/to/your/pkcs11.so"
 
-# The target for logging (stderr, syslog or file).
-log_target = "syslog"
-
-# When logging to syslog, the syslog facility to use.
-log_facility = "daemon"
-
-# When logging to file, the path to write to.
-log_file = "/var/log/nsd-hsm-relay.log"
+[daemon]
+daemonize = true
 
 # The minimum log level to output (error, warn, info, debug, or trace).
-log_level = "info"
+#log_level = "warning"
 
+# The target for logging (stderr, syslog or file).
+log-target = { type = "syslog" }
+
+#[server]
 # The network address and port to listen on for incoming KMIP TLS requests.
-# Note: If SystemD supplies a socket to listen on via socket activation that
+# Note: If systemd supplies a socket to listen on via socket activation that
 # will be used instead of these settings.
-addr = "127.0.0.1"
-port = 5696
+#addr = "127.0.0.1:5696"
 
+#[server.identity]
 # Optional path to ia TLS certificate and key to use (in PEM format).
 # When one or both settings are NOT specified  a self-signed TLS certificate
 # will be generated automatically.
-# cert_path = "/path/to/cert/file"
-# key_path = "/path/to/key/file"
+#cert_path = "/path/to/cert/file"
+#key_path = "/path/to/key/file"

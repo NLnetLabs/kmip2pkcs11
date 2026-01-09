@@ -7,7 +7,7 @@ use kmip::types::{
         BatchItem as ResBatchItem, ResponseHeader, ResponseMessage, ResultReason, ResultStatus,
     },
 };
-use log::error;
+use tracing::error;
 
 pub fn mk_err_batch_item(reason: ResultReason, message: String) -> ResBatchItem {
     ResBatchItem {

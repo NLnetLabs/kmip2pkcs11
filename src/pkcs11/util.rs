@@ -7,10 +7,10 @@ use cryptoki::context::{CInitializeArgs, Function, Pkcs11};
 use cryptoki::object::{Attribute, ObjectClass, ObjectHandle};
 use cryptoki::slot::Slot;
 use kmip::types::common::UniqueIdentifier;
-use log::info;
+use kmip2pkcs11_cfg::v1::Config;
 use rand::RngCore;
+use tracing::info;
 
-use crate::config::Config;
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
 
@@ -48,7 +48,7 @@ impl Pkcs11Pools {
 }
 
 pub fn init_pkcs11(cfg: &mut Config) -> Result<Pkcs11, Error> {
-    let pkcs11 = Pkcs11::new(&cfg.lib_path)?;
+    let pkcs11 = Pkcs11::new(&cfg.pkcs11.lib_path)?;
     pkcs11.initialize(CInitializeArgs::OsThreads)?;
     for f in [
         Function::FindObjects,
@@ -200,7 +200,7 @@ pub fn get_pkcs11_info(pkcs11pool: &Pkcs11Pool, cfg: &Config) -> Result<String, 
     let slot = pkcs11pool.slot();
     let token_info = pkcs11.get_token_info(slot)?;
     let slot_info = pkcs11.get_slot_info(slot)?;
-    let lib_name = cfg.lib_path.file_name().unwrap();
+    let lib_name = cfg.pkcs11.lib_path.file_name().unwrap();
     Ok(format!(
         "PKCS#11 token with label {} in slot {} via library {}",
         token_info.label(),

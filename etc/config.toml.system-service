@@ -12,7 +12,7 @@ version = "v1"
 daemonize = true
 
 # The minimum log level to output (error, warn, info, debug, or trace).
-#log_level = "warning"
+#log_level = "info"
 
 # The target for logging (stderr, syslog or file).
 log-target = { type = "syslog" }

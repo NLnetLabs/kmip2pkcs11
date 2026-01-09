@@ -34,7 +34,7 @@ pub struct Config {
     #[serde(default)]
     pub daemon: DaemonConfig,
 
-    /// Settings required to load and use the customer provided PKCS#11 module.
+    /// Settings required to load and use the user provided PKCS#11 module.
     pub pkcs11: Pkcs11Config,
 
     /// The configuration of the KMIP TCP+TLS server.
@@ -101,10 +101,10 @@ pub enum LogLevel {
     #[default]
     Warning,
 
-    /// Something is wrong (but Cascade can recover).
+    /// Something is wrong (but kmip2pkcs11 can recover).
     Error,
     // Not suppported as daemonbase logging doesn't support the critical level.
-    // /// Something is wrong and Cascade can't function at all.
+    // /// Something is wrong and kmip2pkcs11 can't function at all.
     // Critical,
 }
 
@@ -124,7 +124,7 @@ impl From<LogLevel> for LevelFilter {
 //-------- Pkcs11Config ------------------------------------------------------
 
 /// Configuration settings required for kmip2pkcs11 to be able to load and use
-/// a customer supplied PKCS#11 module.
+/// a user supplied PKCS#11 module.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Pkcs11Config {

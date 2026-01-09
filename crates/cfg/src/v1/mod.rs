@@ -63,12 +63,12 @@ pub struct LoggingConfig {
 /// A logging target.
 // Based on https://github.com/NLnetLabs/cascade/blob/v0.1.0-alpha5/src/config/mod.rs#L397
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields, tag = "type")]
 pub enum LogTarget {
     /// Append logs to a file.
     ///
     /// If the file is a terminal, ANSI color codes may be used.
-    File(PathBuf),
+    File { path: PathBuf },
 
     /// Write logs to the UNIX syslog.
     Syslog,

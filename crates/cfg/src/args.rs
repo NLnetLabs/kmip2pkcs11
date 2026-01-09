@@ -122,7 +122,7 @@ impl clap::builder::TypedValueParser for LogTargetParser {
         if s == "stderr" {
             Ok(LogTarget::Stderr)
         } else if let Some(path) = s.strip_prefix("file:") {
-            Ok(LogTarget::File(path.into()))
+            Ok(LogTarget::File { path: path.into() })
         } else if s == "syslog" {
             Ok(LogTarget::Syslog)
         } else {

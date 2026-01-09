@@ -75,7 +75,7 @@ fn main() -> Result<(), ExitError> {
                 LogLevel::Error => daemonbase::logging::LevelFilter::Error,
             };
             let log_target = match &config.daemon.log.target {
-                LogTarget::File(path) => Target::File(path.to_path_buf()),
+                LogTarget::File { path } => Target::File(path.to_path_buf()),
                 LogTarget::Syslog => Target::Syslog(Facility::LOG_DAEMON),
                 LogTarget::Stderr => Target::Stderr,
             };

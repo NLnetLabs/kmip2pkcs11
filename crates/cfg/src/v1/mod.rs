@@ -95,10 +95,10 @@ pub enum LogLevel {
     Debug,
 
     /// Things are proceeding as expected.
+    #[default]
     Info,
 
     /// Something does not appear to be correct.
-    #[default]
     Warning,
 
     /// Something is wrong (but kmip2pkcs11 can recover).

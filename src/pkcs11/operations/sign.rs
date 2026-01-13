@@ -1,7 +1,7 @@
 use bcder::Mode;
 use bcder::encode::{PrimitiveContent, Values};
 use cryptoki::mechanism::{Mechanism, MechanismType};
-use cryptoki::object::{Attribute, AttributeType};
+use cryptoki::object::{Attribute, AttributeType, ObjectClass};
 use domain::crypto::common::{DigestBuilder, DigestType};
 use kmip::types::common::{
     CryptographicAlgorithm, CryptographicParameters, Data, HashingAlgorithm, PaddingMethod,
@@ -20,7 +20,9 @@ pub fn sign(
     data: &Data,
 ) -> Result<Vec<u8>, Error> {
     // Only private keys can be used for signing.
-    let Some(key_handle) = get_cached_handle_for_key(&pkcs11conn, id) else {
+    let Some(key_handle) =
+        get_cached_handle_for_key(&pkcs11conn, id, Some(ObjectClass::PRIVATE_KEY))
+    else {
         return Err(Error::not_found("Key", "Id", id.0.clone()));
     };
 

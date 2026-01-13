@@ -22,7 +22,8 @@ use crate::kmip::operations::{
 use crate::kmip::util::{mk_err_batch_item, mk_kmip_hex_dump, mk_response};
 use crate::pkcs11::util::Pkcs11Pools;
 
-pub type HandleCache = Cache<String, ObjectHandle>;
+// bool denotes public key if false, private key if true.
+pub type HandleCache = Cache<(String, bool), ObjectHandle>;
 
 pub async fn handle_client_requests(
     mut stream: TlsStream<TcpStream>,

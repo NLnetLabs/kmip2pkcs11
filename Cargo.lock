@@ -413,13 +413,13 @@ dependencies = [
 
 [[package]]
 name = "domain"
-version = "0.11.1-dev"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#8d0025ebc865899e8fff584f8d5f106103101b4f"
+version = "0.11.1"
+source = "git+https://github.com/NLnetLabs/domain.git?branch=main#80ca8b57d8b7d551b4cf5fea020674e694eeecd3"
 dependencies = [
  "bumpalo",
  "bytes",
  "domain-macros",
- "hashbrown 0.14.5",
+ "hashbrown 0.16.1",
  "octseq",
  "openssl",
  "rand 0.8.5",
@@ -430,8 +430,8 @@ dependencies = [
 
 [[package]]
 name = "domain-macros"
-version = "0.11.1-dev"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=patches-for-nameshed-prototype#8d0025ebc865899e8fff584f8d5f106103101b4f"
+version = "0.11.1"
+source = "git+https://github.com/NLnetLabs/domain.git?branch=main#80ca8b57d8b7d551b4cf5fea020674e694eeecd3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -590,18 +590,18 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "hashbrown"
-version = "0.14.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
-dependencies = [
- "allocator-api2",
-]
-
-[[package]]
-name = "hashbrown"
 version = "0.15.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
+
+[[package]]
+name = "hashbrown"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+dependencies = [
+ "allocator-api2",
+]
 
 [[package]]
 name = "heck"

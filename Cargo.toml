@@ -33,7 +33,7 @@ bcder = "0.7.5"
 clap = { workspace = true }
 cryptoki = "^0.10.0"
 daemonbase = { workspace = true }
-domain = { git = "https://github.com/NLnetLabs/domain.git", branch = "patches-for-nameshed-prototype", features = [
+domain = { git = "https://github.com/NLnetLabs/domain.git", version = "0.11.1", branch = "main", features = [
   "unstable-crypto-sign",
 ] }
 hex = "0.4"

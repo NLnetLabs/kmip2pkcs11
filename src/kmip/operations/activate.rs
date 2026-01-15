@@ -1,4 +1,3 @@
-use cryptoki::object::ObjectClass;
 use kmip::types::{
     request::{BatchItem, RequestPayload},
     response::{
@@ -25,7 +24,7 @@ pub fn op(
     // key being activated at least exists.
 
     // Make sure the key exists
-    match get_cached_handle_for_key(&pkcs11conn, id, Some(ObjectClass::PRIVATE_KEY)) {
+    match get_cached_handle_for_key(&pkcs11conn, id) {
         Some(_) => {
             // Nothing more to do as PKCS#11 doesn't support activation.
             Ok(ResBatchItem {

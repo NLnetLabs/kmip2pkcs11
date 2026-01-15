@@ -9,7 +9,7 @@ use cryptoki::slot::Slot;
 use kmip::types::common::UniqueIdentifier;
 use kmip2pkcs11_cfg::v1::Config;
 use rand::RngCore;
-use tracing::{info, trace, warn};
+use tracing::{info, trace};
 
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
@@ -192,39 +192,23 @@ pub fn kmip_unique_identifier_to_pkcs11_cka_id(id: &UniqueIdentifier) -> Vec<u8>
     cka_id
 }
 
-// Either the given id needs to be unique (and being a KMIP UniqueIdentifier
-// it *should* be unique, but in the case of externally created keys (see
-// kmip_unique_identifier_to_pkcs11_cka_id() above) it may not be) OR the
-// object_class_hint needs to be supplied so that when querying the PKCS#11
-// module we are able to narrow the search by CKA_OBJECT_CLASS attribute. We
-// need to narrow the search because PKCS#11 allows the private and public
-// key halves to have the same CKA_ID, they only differ by CKA_OBJECT_CLASS.
 pub fn get_cached_handle_for_key(
     pkcs11conn: &Pkcs11Connection,
     id: &UniqueIdentifier,
-    object_class_hint: Option<ObjectClass>,
 ) -> Option<ObjectHandle> {
-    trace!(
-        "Retrieving object handle for KMIP id {} with object class hint {:?}",
-        id.0, object_class_hint
-    );
+    trace!("Retrieving object handle for KMIP id {}", id.0);
     let object_class = if id.ends_with("_priv") {
         ObjectClass::PRIVATE_KEY
     } else if id.ends_with("_pub") {
         ObjectClass::PUBLIC_KEY
-    } else if let Some(object_class) = object_class_hint {
-        object_class
     } else {
-        warn!(
-            "KMIP unique identifier {} lacks _pub/_priv suffix and no object class hint was given by the calling function: lookup not possible",
-            id.0
-        );
-        return None;
+        // Assume the user has passed us the CKA_ID of a public key.
+        ObjectClass::PUBLIC_KEY
     };
-    let is_private = object_class == ObjectClass::PRIVATE_KEY;
+
     pkcs11conn
         .handle_cache()
-        .optionally_get_with((id.0.clone(), is_private), || {
+        .optionally_get_with(id.0.clone(), || {
             let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id);
             info!(
                 "Finding {object_class} objects for key with CKA_ID {} (from KMIP id {})",

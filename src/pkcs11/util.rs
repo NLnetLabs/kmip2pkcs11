@@ -208,10 +208,10 @@ pub fn get_cached_handle_for_key(
 
     pkcs11conn
         .handle_cache()
-        .optionally_get_with(id.0.clone(), || {
+        .optionally_get_with_by_ref(&id.0, || {
             let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id);
             info!(
-                "Finding objects for key with CKA_ID {} (from KMIP id {})",
+                "Finding {object_class} objects for key with CKA_ID {} (from KMIP id {})",
                 hex::encode(&cka_id),
                 id.0
             );

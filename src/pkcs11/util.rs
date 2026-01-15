@@ -211,7 +211,7 @@ pub fn get_cached_handle_for_key(
         .optionally_get_with(id.0.clone(), || {
             let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id);
             info!(
-                "Finding {object_class} objects for key with CKA_ID {} (from KMIP id {})",
+                "Finding objects for key with CKA_ID {} (from KMIP id {})",
                 hex::encode(&cka_id),
                 id.0
             );

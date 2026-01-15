@@ -469,7 +469,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -647,7 +647,7 @@ dependencies = [
 [[package]]
 name = "kmip-protocol"
 version = "0.5.0"
-source = "git+https://github.com/NLnetLabs/kmip-protocol?branch=next#24fe60710ba60605e851557ba58227b56967b234"
+source = "git+https://github.com/NLnetLabs/kmip-protocol?branch=next#52fd0aaf06fcf06b88583d7049de4d584a710ad9"
 dependencies = [
  "bb8",
  "bitflags 2.10.0",
@@ -666,14 +666,13 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tracing",
- "trait-set",
  "webpki-roots",
 ]
 
 [[package]]
 name = "kmip-ttlv"
 version = "0.4.0"
-source = "git+https://github.com/NLnetLabs/kmip-ttlv?branch=next#4ca144e19e69375a6ccd63cf40b0e61f89462f97"
+source = "git+https://github.com/NLnetLabs/kmip-ttlv?branch=next#295572e07feb30293462267db2de1640ba1bfabe"
 dependencies = [
  "cfg-if",
  "hex",
@@ -682,7 +681,6 @@ dependencies = [
  "serde",
  "tokio",
  "tracing",
- "trait-set",
 ]
 
 [[package]]
@@ -1615,17 +1613,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
-]
-
-[[package]]
-name = "trait-set"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "875c4c873cc824e362fa9a9419ffa59807244824275a44ad06fec9684fff08f2"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]

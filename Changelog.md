@@ -20,9 +20,15 @@ Released yyyy-mm-dd.
 
 ### Breaking changes
 
-- Address config file deficiencies and related documentation weaknesses. ([#18] by @ximon18)
+- Address config file deficiencies and related documentation weaknesses.
+  ([#18] by @ximon18)
+
+### Bug fixes
+
+- Refer to correct payload type in error messages ([#26] by @ximon18)
 
 [#18]: https://github.com/NLnetLabs/kmip2pkcs11/pull/18
+[#26]: https://github.com/NLnetLabs/kmip2pkcs11/pull/26
 
 ## 0.1.0-alpha
 

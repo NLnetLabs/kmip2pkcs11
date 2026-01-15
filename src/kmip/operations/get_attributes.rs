@@ -33,7 +33,7 @@ pub fn op(batch_item: &BatchItem) -> Result<ResBatchItem, (ResultReason, std::st
                 // corresponding private key, which has the same CKA_ID as the
                 // public key so we just have to replace _pub with _priv.
                 let link = id.replace("_priv", "_pub");
-                Some((link, LinkType::PrivateKeyLink))
+                Some((link, LinkType::PublicKeyLink))
             }
             _ => {
                 // Assume that the given ID is a raw CKA_ID that refers to a key

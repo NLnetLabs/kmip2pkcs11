@@ -49,7 +49,7 @@ version = "v1"
 # - 'info': Things are proceeding as expected.
 # - 'warning': Something does not appear to be correct.
 # - 'error': Something went wrong (but kmip2pkcs11 can recover).
-#log-level = "warning"
+#log-level = "info"
 
 # The location the daemon writes logs to.
 #

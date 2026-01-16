@@ -7,7 +7,7 @@ use kmip::types::common::{
     CryptographicAlgorithm, CryptographicParameters, Data, HashingAlgorithm, PaddingMethod,
     UniqueIdentifier,
 };
-use log::debug;
+use tracing::debug;
 
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::Pkcs11Connection;

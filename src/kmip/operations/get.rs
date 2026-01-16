@@ -17,7 +17,7 @@ pub fn op(
     let RequestPayload::Get(Some(id), _, _, _) = batch_item.request_payload() else {
         return Err((
             ResultReason::InvalidMessage,
-            "Batch item payload is not a Create Key Pair payload".to_string(),
+            "Batch item payload is not a Get payload".to_string(),
         ));
     };
 

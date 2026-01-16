@@ -2,6 +2,7 @@ pub mod activate;
 pub mod create_key_pair;
 pub mod discover_versions;
 pub mod get;
+pub mod get_attributes;
 pub mod modify_attribute;
 pub mod query;
 pub mod sign;

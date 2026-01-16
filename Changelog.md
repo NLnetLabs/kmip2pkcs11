@@ -25,9 +25,11 @@ Released yyyy-mm-dd.
 
 ### Bug fixes
 
-- Refer to correct payload type in error messages ([#26] by @ximon18)
+- Don't force systemd users to use syslog. ([#21] by @ximon18)
+- Refer to correct payload type in error messages. ([#26] by @ximon18)
 
 [#18]: https://github.com/NLnetLabs/kmip2pkcs11/pull/18
+[#21]: https://github.com/NLnetLabs/kmip2pkcs11/pull/21
 [#26]: https://github.com/NLnetLabs/kmip2pkcs11/pull/26
 
 ## 0.1.0-alpha
@@ -51,7 +53,5 @@ Released 2025-10-22.
 ## 0.1.0-rc1
 
 Released 2025-09-03
-
-Initial release.
 
 Initial release.

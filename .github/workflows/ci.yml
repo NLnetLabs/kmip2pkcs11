@@ -224,6 +224,10 @@ jobs:
         toolchain: ${{ matrix.rust }}
         cache: false
 
+    # Install SoftHSMv2 (used for some tests).
+    - name: Install SoftHSMv2
+      run: sudo apt-get install -y libsofthsm2
+
     # Build and run the test suite.
     - name: Test
       run: cargo test --all-targets 

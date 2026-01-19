@@ -65,6 +65,10 @@ openssl = ["domain/openssl"]
 [profile.release]
 panic = "abort"
 
+[[test]]
+name = "full"
+harness = false
+
 [package.metadata.deb]
 assets = [
   ["target/release/kmip2pkcs11", "usr/bin/", "755"],

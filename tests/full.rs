@@ -216,6 +216,8 @@ fn main() {
     print!("test_keygen_signing(EcdsaP256Sha256)...");
     test_keygen_signing(&conn_pool, GenerateParams::EcdsaP256Sha256);
     println!("ok");
+
+    // TODO: 'test_keygen_signing()' with more algorithms.
 }
 
 /// Test that key generation and signing works.
@@ -242,4 +244,8 @@ fn test_keygen_signing(pool: &SyncConnPool, key_params: GenerateParams) {
     // Verify the signature.
     assert_eq!(algorithm, sig.algorithm());
     pubkey.verify(data, sig.as_ref()).unwrap();
+
+    // TODO: Delete the key? Does the public part need deletion?
+    //domain_kmip::sign::destroy("A-pub", pool.clone()).unwrap();
+    //domain_kmip::sign::destroy("A-priv", pool.clone()).unwrap();
 }

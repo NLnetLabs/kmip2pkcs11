@@ -26,7 +26,7 @@ use std::{
 
 use domain::crypto::{
     ring,
-    sign::{SignRaw, Signature},
+    sign::{GenerateParams, SignRaw},
 };
 use kmip::client::pool::SyncConnPool;
 
@@ -198,15 +198,27 @@ fn main() {
     )
     .unwrap();
 
-    // Generate a new RSA-SHA256 key.
-    let key = domain_kmip::sign::generate(
-        "A-pub".into(),
-        "A-priv".into(),
-        domain::crypto::sign::GenerateParams::RsaSha256 { bits: 1024 },
-        0,
-        conn_pool,
-    )
-    .unwrap();
+    print!("test_keygen_signing(RsaSha256 {{ bits: 1024 }})...");
+    test_keygen_signing(&conn_pool, GenerateParams::RsaSha256 { bits: 1024 });
+    println!("ok");
+
+    print!("test_keygen_signing(EcdsaP256Sha256)...");
+    test_keygen_signing(&conn_pool, GenerateParams::EcdsaP256Sha256);
+    println!("ok");
+}
+
+/// Test that key generation and signing works.
+///
+/// A new key will be generated (using the given parameters) and used for
+/// signing. The public key will be retrieved and used to locally verify the
+/// signature.
+fn test_keygen_signing(pool: &SyncConnPool, key_params: GenerateParams) {
+    let algorithm = key_params.algorithm();
+
+    // Generate a new key.
+    let key =
+        domain_kmip::sign::generate("A-pub".into(), "A-priv".into(), key_params, 0, pool.clone())
+            .unwrap();
 
     // Retrive the public key, for local use.
     let dnskey = key.dnskey();
@@ -214,13 +226,9 @@ fn main() {
 
     // Sign data with this key.
     let data = b"Hello World!";
-    let sig = match key.sign_raw(data).unwrap() {
-        Signature::RsaSha256(sig) => sig,
-        sig => {
-            panic!("Unexpected signature algorithm {:?}", sig.algorithm());
-        }
-    };
+    let sig = key.sign_raw(data).unwrap();
 
     // Verify the signature.
-    pubkey.verify(data, &sig).unwrap();
+    assert_eq!(algorithm, sig.algorithm());
+    pubkey.verify(data, sig.as_ref()).unwrap();
 }

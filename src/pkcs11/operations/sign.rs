@@ -125,7 +125,7 @@ pub fn sign(
         data = &new_data;
     }
 
-    let signature_data = pkcs11conn.session().sign(&mechanism, key_handle, &data)?;
+    let signature_data = pkcs11conn.session().sign(&mechanism, key_handle, data)?;
 
     if matches!(mechanism, Mechanism::Ecdsa) {
         // Check that the signature is of the form r | s (where | denotes

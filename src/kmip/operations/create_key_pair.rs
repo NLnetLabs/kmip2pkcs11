@@ -84,29 +84,29 @@ pub fn op(
                         }
                     }
                 }
-            } else if attr.name() == "Cryptographic Length" {
-                if let AttributeValue::Integer(key_size) = attr.value() {
-                    // TODO: SAFETY!
-                    modulus = Some(*key_size);
-                }
+            } else if attr.name() == "Cryptographic Length"
+                && let AttributeValue::Integer(key_size) = attr.value()
+            {
+                // TODO: SAFETY!
+                modulus = Some(*key_size);
             }
         }
 
         if let Some(attrs) = pub_key_attrs {
             for attr in attrs.attributes() {
-                if attr.name() == "Name" {
-                    if let AttributeValue::Name(name, name_type) = attr.value() {
-                        match name_type {
-                            NameType::UninterpretedTextString => {
-                                pub_attrs.push(Attribute::Label(name.0.as_bytes().to_vec()));
-                            }
-                            _ => {
-                                return Err((
-                                    ResultReason::InvalidField,
-                                    "Key name attributes must be uninterpreted text strings"
-                                        .to_string(),
-                                ));
-                            }
+                if attr.name() == "Name"
+                    && let AttributeValue::Name(name, name_type) = attr.value()
+                {
+                    match name_type {
+                        NameType::UninterpretedTextString => {
+                            pub_attrs.push(Attribute::Label(name.0.as_bytes().to_vec()));
+                        }
+                        _ => {
+                            return Err((
+                                ResultReason::InvalidField,
+                                "Key name attributes must be uninterpreted text strings"
+                                    .to_string(),
+                            ));
                         }
                     }
                 }
@@ -115,19 +115,19 @@ pub fn op(
 
         if let Some(attrs) = priv_key_attrs {
             for attr in attrs.attributes() {
-                if attr.name() == "Name" {
-                    if let AttributeValue::Name(name, name_type) = attr.value() {
-                        match name_type {
-                            NameType::UninterpretedTextString => {
-                                priv_attrs.push(Attribute::Label(name.0.as_bytes().to_vec()));
-                            }
-                            _ => {
-                                return Err((
-                                    ResultReason::InvalidField,
-                                    "Key name attributes must be uninterpreted text strings"
-                                        .to_string(),
-                                ));
-                            }
+                if attr.name() == "Name"
+                    && let AttributeValue::Name(name, name_type) = attr.value()
+                {
+                    match name_type {
+                        NameType::UninterpretedTextString => {
+                            priv_attrs.push(Attribute::Label(name.0.as_bytes().to_vec()));
+                        }
+                        _ => {
+                            return Err((
+                                ResultReason::InvalidField,
+                                "Key name attributes must be uninterpreted text strings"
+                                    .to_string(),
+                            ));
                         }
                     }
                 }
@@ -142,14 +142,13 @@ pub fn op(
         ));
     };
 
-    if matches!(mechanism, Mechanism::RsaPkcsKeyPairGen) {
-        if let Some(modulus) = modulus {
-            pub_attrs.push(Attribute::ModulusBits(
-                (modulus as usize).try_into().unwrap(),
-            ));
-        }
+    if matches!(mechanism, Mechanism::RsaPkcsKeyPairGen)
+        && let Some(modulus) = modulus
+    {
+        pub_attrs.push(Attribute::ModulusBits(
+            (modulus as usize).try_into().unwrap(),
+        ));
     }
-
     // TODO: Detect sign mask in the above and push it as an attr.
 
     // TODO: Verify that no other key already has this name. Return Illegal

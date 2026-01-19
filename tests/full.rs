@@ -71,7 +71,7 @@ impl Daemon {
                 r#"
 version = "v1"
 pkcs11.lib-path = {lib_path:?}
-daemon.log-level = "info"
+daemon.log-level = "debug"
 daemon.log-target = {{ type = "file", path = {log_path:?} }}
 "#
             ),
@@ -157,6 +157,13 @@ impl Drop for Daemon {
         // Stop the daemon.
         // TODO: Use SIGTERM?
         let _ = self.process.kill();
+
+        if std::thread::panicking() {
+            // Try to provide the daemon log file.
+            if let Ok(log) = std::fs::read_to_string(self.tempdir.path().join("log")) {
+                eprintln!("kmip2pkcs11 log:\n{log}");
+            }
+        }
     }
 }
 

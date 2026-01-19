@@ -38,11 +38,10 @@ domain = { git = "https://github.com/NLnetLabs/domain.git", version = "0.11.1", 
 ] }
 hex = "0.4"
 kmip-ttlv = { git = "https://github.com/NLnetLabs/kmip-ttlv", branch = "next", version = "0.4.0", default-features = false, features = [
-  "async-with-tokio",
+  "sync",
   "high-level",
 ] }
 kmip = { git = "https://github.com/NLnetLabs/kmip-protocol", branch = "next", package = "kmip-protocol", version = "0.5", default-features = false, features = [
-  "tls-with-tokio-rustls",
 ] }
 kmip2pkcs11-cfg = { path = "crates/cfg" }
 listenfd = "1.0.2"
@@ -52,7 +51,7 @@ r2d2 = "0.8.10"
 rand = "0.9.2"
 rcgen = { version = "0.14.3", optional = true }
 rpki = { version = "0.18", features = ["crypto"] }
-tokio = { version = "1.47.1", features = ["macros", "net", "rt-multi-thread"] }
+tokio = { version = "1.47.1", features = ["macros", "io-util", "net", "rt-multi-thread"] }
 rustls = "0.23.31"
 serde = { version = "1.0.219", features = ["derive"] }
 toml = "0.9.5"
@@ -60,6 +59,17 @@ tokio-rustls = "0.26.2"
 
 
 [dev-dependencies]
+
+# A KMIP client is needed to test the daemon against.
+#
+# - 'domain-kmip' is a Rust crate providing KMIP client services tailored for
+#   DNSSEC cryptography.
+#
+#   It is maintained by us (NLnet Labs).
+[target.'cfg(unix)'.dev-dependencies.domain-kmip]
+version = "0.0.1"
+git = "https://github.com/NLnetLabs/domain-kmip.git"
+branch = "main"
 
 # When spawning the daemon for testing, a temporary directory is needed to hold
 # configuration and state files (including those of the HSM).

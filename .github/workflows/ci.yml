@@ -1,0 +1,233 @@
+# ======================================================
+# Continuous Integration: making sure the codebase works
+# ======================================================
+#
+# This workflow tests modifications to 'kmip2pkcs11', ensuring that the daemon
+# can be used by others successfully. It verifies certain aspects of the
+# codebase, such as the formatting and feature flag combinations, and runs the
+# full test suite. It runs on Ubuntu.
+
+name: CI
+
+# When the workflow runs
+# ----------------------
+on:
+  # Execute when a pull request is (re-) opened or its head changes (e.g. new
+  # commits are added or the commit history is rewritten) ... but only if
+  # build-related files change.
+  pull_request:
+    paths:
+      - '**.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/ci.yml'
+
+  # If a pull request is merged, at least one commit is added to the target
+  # branch. If the target is another pull request, it will be caught by the
+  # above event. We miss PRs that merge to a non-PR branch, except for the
+  # 'main' branch.
+
+  # Execute when a commit is pushed to 'main' (including merged PRs) or to a
+  # release tag ... but only if build-related files change.
+  push:
+    branches:
+      - 'main'
+      - 'releases/**'
+    paths:
+      - '**.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/ci.yml'
+
+  # Rebuild 'main' every week. This will account for changes to dependencies
+  # and to Rust, either of which can trigger new failures. Rust releases are
+  # every 6 weeks, on a Thursday; this event runs every Friday.
+  schedule:
+    - cron: '0 10 * * FRI'
+
+defaults:
+  run:
+    shell: bash
+
+# Jobs
+# ----------------------------------------------------------------------------
+jobs:
+
+  # Check Formatting
+  # ----------------
+  #
+  # NOTE: This job is run even if no '.rs' files have changed. Inserting such
+  # a check would require using a separate workflow file or using third-party
+  # actions. Most commits do change '.rs' files, and 'cargo-fmt' is pretty
+  # fast, so optimizing this is not necessary.
+  check-fmt:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+
+    # Load the repository.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Set up the Rust toolchain.
+    - name: Set up Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt
+        cache: false
+
+    # Do the actual formatting check.
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+  # Determine MSRV
+  # --------------
+  #
+  # The MSRV needs to be determined as we will test 'kmip2pkcs11' against the
+  # Rust compiler at that version.
+  determine-msrv:
+    name: Determine MSRV
+    runs-on: ubuntu-latest
+    outputs:
+      msrv: ${{ steps.determine-msrv.outputs.msrv }}
+    steps:
+
+    # Load the repository.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Determine the MSRV.
+    - name: Determine MSRV
+      id: determine-msrv
+      run: |
+        msrv=`cargo metadata --no-deps --format-version 1 | jq -r '.packages[]|select(.name=="kmip2pkcs11")|.rust_version'`
+        echo "msrv=$msrv" >> "$GITHUB_OUTPUT"
+
+  # Check Feature Flags
+  # -------------------
+  #
+  # Rust does not provide any way to check that all possible feature flag
+  # combinations will succeed, so we need to try them manually here. We will
+  # assume this choice is not influenced by the OS or Rust version.
+  check-feature-flags:
+    name: Check feature flags
+    runs-on: ubuntu-latest
+    steps:
+
+    # Load the repository.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Set up the Rust toolchain.
+    - name: Set up Rust
+      id: setup-rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: false
+
+    # Do the actual feature flag checks.
+    - name: Check empty feature set
+      run: cargo check --all-targets --no-default-features
+
+  # Check Minimal Versions
+  # ----------------------
+  #
+  # Ensure that 'kmip2pkcs11' compiles with the oldest compatible versions of
+  # all packages, even those 'kmip2pkcs11' depends upon indirectly.
+  check-minimal-versions:
+    name: Check minimal versions
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+
+    # Load the repository.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Set up the Rust toolchain.
+    - name: Set up Rust nightly
+      id: setup-rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: nightly, stable
+        cache: false
+
+    # Lock all dependencies to their minimal versions.
+    - name: Lock dependencies to minimal versions
+      run: cargo +nightly update -Z minimal-versions
+
+    # Check that 'kmip2pkcs11' compiles.
+    - name: Check
+      run: cargo check --all-targets --all-features --locked
+
+  # Clippy
+  # ------
+  #
+  # We run Clippy separately, and only on nightly Rust because it offers a
+  # superset of the lints.
+  #
+  # 'cargo clippy' and 'cargo build' can share some state for fast execution,
+  # but it's faster to execute them in parallel than to establish an ordering
+  # between them.
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+
+    # Load the repository.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Set up the Rust toolchain.
+    - name: Set up Rust nightly
+      id: setup-rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: nightly
+        components: clippy
+        cache: false
+
+    # Do the actually Clippy run.
+    - name: Check Clippy
+      run: cargo +nightly clippy --all-targets --all-features
+
+  # Test
+  # ----
+  #
+  # Ensure that 'kmip2pkcs11' compiles and its test suite passes, on a large
+  # number of operating systems and Rust versions.
+  test:
+    name: Test
+    needs: determine-msrv
+    strategy:
+      matrix:
+        rust: ["${{ needs.determine-msrv.outputs.msrv }}", stable, nightly]
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-D warnings"
+    steps:
+
+    # Load the repository.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Set up the Rust toolchain.
+    - name: Set up Rust ${{ matrix.rust }}
+      id: setup-rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        cache: false
+
+    # Build and run the test suite.
+    - name: Test
+      run: cargo test --all-targets 
+
+    # Test docs.
+    - name: Test docs
+      run: cargo test --doc

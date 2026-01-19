@@ -23,7 +23,7 @@ pub fn op(
     if id.is_none() {
         return Err((
             ResultReason::InvalidField,
-            format!("UniqueIdentifier must be provided"),
+            "UniqueIdentifier must be provided".to_string(),
         ));
     }
 
@@ -53,7 +53,7 @@ pub fn op(
         ));
     };
 
-    let Some(key_handle) = get_cached_handle_for_key(&pkcs11conn, &id) else {
+    let Some(key_handle) = get_cached_handle_for_key(&pkcs11conn, id) else {
         return Err((
             ResultReason::ItemNotFound,
             format!("Key with id {} not found", id.0),

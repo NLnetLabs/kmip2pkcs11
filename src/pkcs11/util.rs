@@ -89,21 +89,20 @@ pub fn get_slot(pkcs11: &Pkcs11, slot_str: &str) -> Result<Slot, Error> {
     }
 
     // Next try finding a slot with a matching id
-    if let Ok(slot_id) = slot_str.parse::<u64>() {
-        if let Some(slot) = pkcs11
+    if let Ok(slot_id) = slot_str.parse::<u64>()
+        && let Some(slot) = pkcs11
             .get_slots_with_initialized_token()?
             .into_iter()
             .find(|&slot| slot.id() == slot_id)
-        {
-            return Ok(slot);
-        }
+    {
+        return Ok(slot);
     }
 
     // Lastly, try finding a slot by index
-    if let Ok(slot_index) = slot_str.parse::<usize>() {
-        if let Some(slot) = pkcs11.get_all_slots()?.get(slot_index) {
-            return Ok(*slot);
-        }
+    if let Ok(slot_index) = slot_str.parse::<usize>()
+        && let Some(slot) = pkcs11.get_all_slots()?.get(slot_index)
+    {
+        return Ok(*slot);
     }
 
     Err(Error::not_found(
@@ -183,11 +182,10 @@ pub fn get_cached_handle_for_key(
             if let Ok(res) = pkcs11conn
                 .session()
                 .find_objects(&[Attribute::Id(cka_id), Attribute::Class(object_class)])
+                && res.len() == 1
             {
-                if res.len() == 1 {
-                    info!("Found");
-                    return Some(res[0]);
-                }
+                info!("Found");
+                return Some(res[0]);
             }
 
             info!("Missing or more than one match");

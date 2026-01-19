@@ -78,19 +78,19 @@ impl Pkcs11Pool {
 
 fn max_token_concurrency(pkcs11: &Pkcs11, slot: Slot) -> Result<Option<u32>, Error> {
     let token_info = pkcs11.get_token_info(slot)?;
-    if let Limit::Max(v) = token_info.max_rw_session_count() {
-        if let Ok(v) = u32::try_from(v) {
-            return Ok(Some(v));
-        }
+    if let Limit::Max(v) = token_info.max_rw_session_count()
+        && let Ok(v) = u32::try_from(v)
+    {
+        return Ok(Some(v));
     }
     Ok(None)
 }
 
 fn max_os_concurrency() -> Option<u32> {
-    if let Ok(v) = available_parallelism() {
-        if let Ok(v) = u32::try_from(v.get()) {
-            return Some(v);
-        }
+    if let Ok(v) = available_parallelism()
+        && let Ok(v) = u32::try_from(v.get())
+    {
+        return Some(v);
     }
     None
 }

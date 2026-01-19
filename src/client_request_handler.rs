@@ -111,8 +111,8 @@ pub async fn handle_client_requests(
 
             Ok(request) => {
                 if enabled!(Level::DEBUG) {
-                    let req_hex = mk_kmip_hex_dump(&request_bytes);
-                    let req_human = pp.to_string(&request_bytes);
+                    let req_hex = mk_kmip_hex_dump(request_bytes);
+                    let req_human = pp.to_string(request_bytes);
                     debug!("Request hex:\n{req_hex}\nRequest dump:\n{req_human}\n");
                 }
 
@@ -130,8 +130,8 @@ pub async fn handle_client_requests(
             }
 
             Err(error) => {
-                let req_hex = mk_kmip_hex_dump(&request_bytes);
-                let req_human = pp.to_string(&request_bytes);
+                let req_hex = mk_kmip_hex_dump(request_bytes);
+                let req_human = pp.to_string(request_bytes);
 
                 error!(
                     "Error while parsing KMIP request from client {peer_addr}: {error}.\nRequest hex:\n{req_hex}\nRequest dump:\n{req_human}\n",

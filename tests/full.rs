@@ -20,7 +20,15 @@ use std::{
     io,
     net::{Ipv6Addr, SocketAddr, TcpListener},
     process::Command,
+    sync::Arc,
+    time::Duration,
 };
+
+use domain::crypto::{
+    ring,
+    sign::{SignRaw, Signature},
+};
+use kmip::client::pool::SyncConnPool;
 
 use command_fds::{CommandFdExt, FdMapping};
 
@@ -153,11 +161,63 @@ impl Drop for Daemon {
 }
 
 fn main() {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .unwrap();
+
     // Launch the daemon.
     let daemon = Daemon::launch().unwrap_or_else(|err| {
         eprintln!("Could not launch the daemon: {err}");
         std::process::exit(1)
     });
 
-    todo!()
+    // Establish a connection pool for talking to the daemon.
+    let conn_settings = Arc::new(domain_kmip::ConnectionSettings {
+        host: daemon.address.ip().to_string(),
+        port: daemon.address.port(),
+        username: Some(daemon.slot.0.clone()),
+        password: Some(daemon.slot.1.clone()),
+        insecure: true,
+        client_cert: None,
+        server_cert: None,
+        ca_cert: None,
+        connect_timeout: Some(Duration::from_secs(5)),
+        read_timeout: Some(Duration::from_secs(5)),
+        write_timeout: Some(Duration::from_secs(5)),
+        max_response_bytes: Some(4096),
+    });
+    let conn_pool = SyncConnPool::new(
+        daemon.address.to_string(),
+        conn_settings,
+        32,
+        Some(Duration::from_secs(5)),
+        Some(Duration::from_secs(5)),
+    )
+    .unwrap();
+
+    // Generate a new RSA-SHA256 key.
+    let key = domain_kmip::sign::generate(
+        "A-pub".into(),
+        "A-priv".into(),
+        domain::crypto::sign::GenerateParams::RsaSha256 { bits: 1024 },
+        0,
+        conn_pool,
+    )
+    .unwrap();
+
+    // Retrive the public key, for local use.
+    let dnskey = key.dnskey();
+    let pubkey = ring::PublicKey::from_dnskey(&dnskey).unwrap();
+
+    // Sign data with this key.
+    let data = b"Hello World!";
+    let sig = match key.sign_raw(data).unwrap() {
+        Signature::RsaSha256(sig) => sig,
+        sig => {
+            panic!("Unexpected signature algorithm {:?}", sig.algorithm());
+        }
+    };
+
+    // Verify the signature.
+    pubkey.verify(data, &sig).unwrap();
 }

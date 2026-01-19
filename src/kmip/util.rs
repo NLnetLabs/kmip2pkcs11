@@ -59,7 +59,7 @@ pub fn mk_kmip_hex_dump(cap: &[u8]) -> String {
         // of 8 characters.
         .map(|buf| {
             buf.chunks(8)
-                .map(|buf| unsafe { str::from_utf8_unchecked(buf) })
+                .map(|buf| unsafe { std::str::from_utf8_unchecked(buf) })
                 .collect::<Vec<&str>>()
                 .join(" ")
         })

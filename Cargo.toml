@@ -51,7 +51,7 @@ tracing = { workspace = true }
 moka = { version = "0.12.10", features = ["sync"] }
 r2d2 = "0.8.10"
 rand = "0.9.2"
-rcgen = { version = "0.14.3", optional = true }
+rcgen = { version = "0.14.3" }
 rpki = { version = "0.18", features = ["crypto"] }
 tokio = { version = "1.47.1", features = ["macros", "io-util", "net", "rt-multi-thread"] }
 rustls = { version = "0.23.31", default-features = false, features = ["ring", "logging", "std"] }
@@ -104,7 +104,7 @@ version = "3.24.0"
 version = "0.3.2"
 
 [features]
-default = ["domain/ring", "rcgen"]
+default = ["domain/ring"]
 openssl = ["domain/openssl"]
 
 [profile.release]

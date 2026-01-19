@@ -168,10 +168,6 @@ impl Drop for Daemon {
 }
 
 fn main() {
-    rustls::crypto::aws_lc_rs::default_provider()
-        .install_default()
-        .unwrap();
-
     // Launch the daemon.
     let daemon = Daemon::launch().unwrap_or_else(|err| {
         eprintln!("Could not launch the daemon: {err}");

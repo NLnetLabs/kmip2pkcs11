@@ -61,8 +61,19 @@ impl Daemon {
         let tempdir = tempfile::tempdir()?;
 
         // Determine the location of the SoftHSMv2 library.
-        // TODO: Allow overriding with env var / CLI.
-        let lib_path = "/usr/lib64/softhsm/libsofthsm2.so";
+        let lib_path = std::env::var_os("SOFTHSM2_PATH")
+            .into_iter()
+            .chain(
+                [
+                    "/usr/lib64/softhsm/libsofthsm2.so",
+                    "/usr/lib/softhsm/libsofthsm2.so",
+                ]
+                .into_iter()
+                .filter(|&p| std::fs::exists(p).is_ok_and(|v| v))
+                .map(|v| String::from(v).into()),
+            )
+            .next()
+            .unwrap_or_else(|| panic!("could not locate the SoftHSMv2 library!"));
 
         // Configure the daemon.
         let config_path = tempdir.path().join("config.toml");

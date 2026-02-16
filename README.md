@@ -12,6 +12,10 @@
 
 Documentation is available as part of the Cascade project [here](https://cascade.docs.nlnetlabs.nl/projects/kmip2pkcs11/).
 
+## Building
+
+See ["Building From Source"](https://cascade.docs.nlnetlabs.nl/en/latest/building.html) in the documentation.
+
 ## Use cases
 
 ### Intended use case: shielding Cascade against an untrusted PKCS#11 library

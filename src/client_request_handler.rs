@@ -231,7 +231,9 @@ fn process_request(
             Operation::Query => query::op(&pool, config, batch_item),
             _ => {
                 let pkcs11conn = pool.get().unwrap();
-                if let Err(err) = pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string())) {
+                if let Err(err) =
+                    pkcs11conn.ensure_logged_in(AuthPin::new(pin.to_string().into_boxed_str()))
+                {
                     Err((ResultReason::AuthenticationNotSuccessful, err.to_string()))
                 } else {
                     match batch_item.operation() {

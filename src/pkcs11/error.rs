@@ -198,7 +198,8 @@ impl Display for Error {
                     RvError::PinTooWeak => "PinTooWeak",
                     RvError::PublicKeyInvalid => "PublicKeyInvalid",
                     RvError::FunctionRejected => "FunctionRejected",
-                    RvError::VendorDefined => "VendorDefined",
+                    RvError::VendorDefined(_) => "VendorDefined",
+                    RvError::UnknownErrorCode(_) => "UnknownErrorCode",
                 };
                 write!(
                     f,

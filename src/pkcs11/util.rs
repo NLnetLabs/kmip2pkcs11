@@ -3,7 +3,7 @@ use std::collections::hash_map::Entry;
 use std::result::Result;
 use std::sync::{Arc, RwLock};
 
-use cryptoki::context::{CInitializeArgs, Function, Pkcs11};
+use cryptoki::context::{CInitializeArgs, CInitializeFlags, Function, Pkcs11};
 use cryptoki::object::{Attribute, ObjectClass, ObjectHandle};
 use cryptoki::slot::Slot;
 use kmip::types::common::UniqueIdentifier;
@@ -49,7 +49,7 @@ impl Pkcs11Pools {
 
 pub fn init_pkcs11(cfg: &mut Config) -> Result<Pkcs11, Error> {
     let pkcs11 = Pkcs11::new(&cfg.pkcs11.lib_path)?;
-    pkcs11.initialize(CInitializeArgs::OsThreads)?;
+    pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK))?;
     for f in [
         Function::FindObjects,
         Function::GenerateKeyPair,

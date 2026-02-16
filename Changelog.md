@@ -25,10 +25,13 @@ Released yyyy-mm-dd.
 
 ### Bug fixes
 
+- Providing a non-PKCS#11 module .so file as lib-path causes panic. ([#19] by
+  @ximon18)
 - Don't force systemd users to use syslog. ([#21] by @ximon18)
 - Refer to correct payload type in error messages. ([#26] by @ximon18)
 
 [#18]: https://github.com/NLnetLabs/kmip2pkcs11/pull/18
+[#19]: https://github.com/NLnetLabs/kmip2pkcs11/pull/19
 [#21]: https://github.com/NLnetLabs/kmip2pkcs11/pull/21
 [#26]: https://github.com/NLnetLabs/kmip2pkcs11/pull/26
 

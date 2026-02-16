@@ -62,6 +62,7 @@ impl Daemon {
             .into_iter()
             .chain(
                 [
+                    "/usr/lib64/pkcs11/libsofthsm2.so", // Fedora 43
                     "/usr/lib64/softhsm/libsofthsm2.so",
                     "/usr/lib/softhsm/libsofthsm2.so",
                 ]

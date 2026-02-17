@@ -9,7 +9,7 @@ use cryptoki::slot::Slot;
 use kmip::types::common::UniqueIdentifier;
 use kmip2pkcs11_cfg::v1::Config;
 use rand::RngCore;
-use tracing::info;
+use tracing::{info, trace};
 
 use crate::pkcs11::error::Error;
 use crate::pkcs11::pool::{Pkcs11Connection, Pkcs11Pool};
@@ -154,9 +154,34 @@ pub fn pkcs11_cka_id_to_kmip_unique_identifier(cka_id: &[u8], private: bool) -> 
 }
 
 pub fn kmip_unique_identifier_to_pkcs11_cka_id(id: &UniqueIdentifier) -> Vec<u8> {
-    let id_len = match id.ends_with("_priv") {
-        true => id.len() - 5,  // subtract _priv
-        false => id.len() - 4, // subtract _pub
+    let id_len = if id.ends_with("_priv") {
+        id.len() - 5 // subtract _priv
+    } else if id.ends_with("_pub") {
+        id.len() - 4 // subtract _pub
+    } else {
+        // Use the given KMIP ID as-is as a PKCS#11 CKA_ID. This supports the
+        // use case whereby a key was not created by us and thus the KMIP ID
+        // lacks a _priv or _pub suffix.
+        //
+        // Technically such a key violates the KMIP specification as in KMIP
+        // a public key and a private key are separate objects with their own
+        // unique identifiers. In PKCS#11 however it is quite common, and not
+        // a violation of the spec, for public and private keys to have the
+        // same CKA_ID.
+        //
+        // PKCS#11 v2.40 says:
+        //   - "CKA_ID... Key identifier for key (default empty)"
+        //   - "the key identifier for a public key and its corresponding
+        //     private key should be the same"
+        //   - "Since the keys are distinguished by subject name as well as
+        //     identifier, it is possible that keys for different subjects may
+        //     have the same CKA_ID value without introducing any ambiguity.)"
+        //
+        // In fact the keys we generate also have the same CKA_ID for both
+        // the public and private halves of the key, it's just that when we
+        // notify the KMIP client of the created IDs we make them KMIP valid
+        // by making them unique by applying the _priv and _pub suffixes.
+        id.len()
     };
     // The hex encoding in the UniqueIdentifier takes twice as many bytes as
     // the decoded form, so divide by two, e.g. "FF" is two bytes but
@@ -170,15 +195,25 @@ pub fn get_cached_handle_for_key(
     pkcs11conn: &Pkcs11Connection,
     id: &UniqueIdentifier,
 ) -> Option<ObjectHandle> {
+    trace!("Retrieving object handle for KMIP id {}", id.0);
+    let object_class = if id.ends_with("_priv") {
+        ObjectClass::PRIVATE_KEY
+    } else if id.ends_with("_pub") {
+        ObjectClass::PUBLIC_KEY
+    } else {
+        // Assume the user has passed us the CKA_ID of a public key.
+        ObjectClass::PUBLIC_KEY
+    };
+
     pkcs11conn
         .handle_cache()
         .optionally_get_with_by_ref(&id.0, || {
             let cka_id = kmip_unique_identifier_to_pkcs11_cka_id(id);
-            let object_class = match id.ends_with("_priv") {
-                true => ObjectClass::PRIVATE_KEY,
-                false => ObjectClass::PUBLIC_KEY,
-            };
-            info!("Finding objects for key... {}", hex::encode(&cka_id));
+            info!(
+                "Finding {object_class} objects for key with CKA_ID {} (from KMIP id {})",
+                hex::encode(&cka_id),
+                id.0
+            );
             if let Ok(res) = pkcs11conn
                 .session()
                 .find_objects(&[Attribute::Id(cka_id), Attribute::Class(object_class)])

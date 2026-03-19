@@ -79,9 +79,7 @@ fn main() -> Result<(), ()> {
                     _ => "unknown error occured while attempting to run git",
                 };
                 println!("cargo::warning={msg}. Unable to determine git revision...");
-                if package == "cascade-hsm-bridge" {
-                    println!("cargo::rerun-if-changed=.git");
-                }
+                println!("cargo::rerun-if-changed=.git");
             })
             .ok()
             .map(|o| o.status.success());

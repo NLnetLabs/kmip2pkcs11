@@ -35,6 +35,10 @@ Released yyyy-mm-dd.
 [#21]: https://github.com/NLnetLabs/kmip2pkcs11/pull/21
 [#26]: https://github.com/NLnetLabs/kmip2pkcs11/pull/26
 
+### Other changes
+
+- Add the git commit hash to the version output. ([#XX] by @ximon18)
+
 ## 0.1.0-alpha
 
 Released 2025-10-22.

@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use cascade_hsm_bridge_cfg::args::Args;
 use cascade_hsm_bridge_cfg::v1::{Config, LogLevel, LogTarget, ServerIdentity};
-use clap::{Command, crate_authors, crate_description, crate_version};
+use clap::{Command, crate_authors, crate_description};
 use cryptoki::context::{Function, Pkcs11};
 use cryptoki::error::Error as CryptokiError;
 use cryptoki::error::RvError;
@@ -36,7 +36,7 @@ fn main() -> Result<(), ExitError> {
 
     // Parse command-line arguments.
     let app = Command::new("cascade-hsm-bridge")
-        .version(crate_version!())
+        .version(env!("CASCADE_HSM_BRIDGE_BUILD_VERSION"))
         .author(crate_authors!())
         .about(crate_description!())
         .next_line_help(true)
@@ -51,6 +51,11 @@ fn main() -> Result<(), ExitError> {
 
     // Process parsed command-line arguments.
     let args = Args::process(&matches);
+
+    info!(
+        "Cascade-HSM-Bridge version {}",
+        env!("CASCADE_HSM_BRIDGE_BUILD_VERSION")
+    );
 
     // Load the config file.
     let mut config = cascade_hsm_bridge_cfg::Config::from_file(&args.config)

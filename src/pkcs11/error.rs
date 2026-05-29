@@ -101,7 +101,7 @@ impl Display for Error {
         match self {
             Error::HsmFailure(cryptoki::error::Error::LibraryLoading(e)) => write!(
                 f,
-                "Relay failed to load the configured PKCS#11 library: {e}"
+                "Bridge failed to load the configured PKCS#11 library: {e}"
             ),
             Error::HsmFailure(cryptoki::error::Error::Pkcs11(rv_error, func)) => {
                 let rv_error_code = match rv_error {
@@ -203,45 +203,45 @@ impl Display for Error {
                 };
                 write!(
                     f,
-                    "Relay failed to invoke PKCS#11 function '{func}': {rv_error_code}"
+                    "Bridge failed to invoke PKCS#11 function '{func}': {rv_error_code}"
                 )
             }
-            Error::HsmFailure(e) => write!(f, "Relay PKCS#11 Rust abstraction layer error: {e}"),
-            Error::UnusableConfig(e) => write!(f, "Relay settings may be incorrect: {e}"),
+            Error::HsmFailure(e) => write!(f, "Bridge PKCS#11 Rust abstraction layer error: {e}"),
+            Error::UnusableConfig(e) => write!(f, "Bridge settings may be incorrect: {e}"),
             Error::DataNotFound {
                 data_type,
                 id_type,
                 id_value,
             } => write!(
                 f,
-                "Relay could not find data of type '{data_type}' with id '{id_value}' (type '{id_type}')"
+                "Bridge could not find data of type '{data_type}' with id '{id_value}' (type '{id_type}')"
             ),
             Error::UnsupportedAttribute(attribute) => write!(
                 f,
-                "Relay lacks support for PKCS#11 attribute of type '{}'",
+                "Bridge lacks support for PKCS#11 attribute of type '{}'",
                 attribute.attribute_type()
             ),
             Error::UnsupportedKeyType(key_type) => {
-                write!(f, "Relay lacks support for PKCS#11 key type '{key_type}'")
+                write!(f, "Bridge lacks support for PKCS#11 key type '{key_type}'")
             }
             Error::UnsupportedMechanismType(mechanism_type) => write!(
                 f,
-                "Relay lacks support for PKCS#11 mechanism type '{mechanism_type}'"
+                "Bridge lacks support for PKCS#11 mechanism type '{mechanism_type}'"
             ),
             Error::UnsupportedObjectClass(object_class) => write!(
                 f,
-                "Relay lacks support for PKCS#11 object class '{object_class}'"
+                "Bridge lacks support for PKCS#11 object class '{object_class}'"
             ),
             Error::UnsupportedCryptographicParameters(err) => write!(
                 f,
-                "Relay lacks support for signing with the given cryptographic parameters: {err}"
+                "Bridge lacks support for signing with the given cryptographic parameters: {err}"
             ),
             Error::NoFreeKeyIdAvailable => write!(
                 f,
-                "Relay faile to generate a CKA_ID value that isn't already taken by an existing key"
+                "Bridge faile to generate a CKA_ID value that isn't already taken by an existing key"
             ),
             Error::MalformedDataReceived(err) => {
-                write!(f, "Relay received malformed PKCS#11 data: {err}")
+                write!(f, "Bridge received malformed PKCS#11 data: {err}")
             }
         }
     }

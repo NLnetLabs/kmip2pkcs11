@@ -41,10 +41,11 @@ application itself which can be confusing.
 
 ### Other use cases
 
-This project could potentially act as the basis for a general purpose KMIP to
-PKCS#11 relay. However, at present and for the foreseeable future we plan only
-to implement the tiny fraction of the KMIP specification needed by the Cascade
-project, and the only KMIP client that will be tested against will be Cascade.
+This project could potentially act as the basis for a general purpose KMIP
+to PKCS#11 bridge. However, at present and for the foreseeable future we plan
+only to implement the tiny fraction of the KMIP specification needed by the
+Cascade project, and the only KMIP client that will be tested against will
+be Cascade.
 
 ## Technical foundations
 

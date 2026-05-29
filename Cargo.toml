@@ -18,7 +18,7 @@ tracing    = { version = "0.1" }
 
 [package]
 name                   = "cascade-hsm-bridge"
-description            = "A KMIP to PKCS#11 relay."
+description            = "A KMIP to PKCS#11 bridge."
 keywords               = ["KMIP", "PKCS#11", "HSM", "Rust"]
 categories             = ["cryptography"]
 readme                 = "README.md"
@@ -133,7 +133,7 @@ name = "cascade-hsm-bridge"
 maintainer = "NLnet Labs <rust-team@nlnetlabs.nl>"
 license-file = ["LICENSE", "0"]
 extended-description = """\
-A relay for connecting OASIS KMIP compatible HSM clients to PKCS#11 compatible HSMs."""
+A bridge for connecting OASIS KMIP compatible HSM clients to PKCS#11 compatible HSMs."""
 depends = "$auto, adduser"
 section = "net"
 priority = "optional"

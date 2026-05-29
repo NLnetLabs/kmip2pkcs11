@@ -1,5 +1,5 @@
 [Unit]
-Description=A KMIP to PKCS#11 relay.
+Description=A KMIP to PKCS#11 bridge.
 Documentation=man:cascade-hsm-bridge(1)
 After=network.target
 

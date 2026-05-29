@@ -146,7 +146,7 @@ pub fn create_key_pair(
     //
     //   ERROR ThreadId(02) domain::crypto::kmip::sign: KMIP request failed:
     //   Server error: Operation CreateKeyPair failed: Failed to create key
-    //   pair: Relay failed to invoke PKCS#11 function
+    //   pair: Bridge failed to invoke PKCS#11 function
     //   'Function::GenerateKeyPair': An invalid value was specified for a
     //   particular attribute in a template.  See Section 4.1 for more
     //   information.

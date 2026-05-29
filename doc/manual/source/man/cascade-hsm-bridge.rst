@@ -1,5 +1,5 @@
 cascade-hsm-bridge Daemon
-==================
+=========================
 
 Synopsis
 --------
@@ -11,13 +11,14 @@ Description
 
 .. only:: html
 
-    **cascade-hsm-bridge** is a KMIP to PKCS#11 relay used primarily by `Cascade
-    <https://cascade.docs.nlnetlabs.nl>`_ to access PKCS#11 compatible HSMs.
+    **cascade-hsm-bridge** is a KMIP to PKCS#11 bridge used primarily
+    by `Cascade <https://cascade.docs.nlnetlabs.nl>`_ to access PKCS#11
+    compatible HSMs.
 
 .. only:: man or text or latex or epub
 
-    **cascade-hsm-bridge** is a KMIP to PKCS#11 relay used primarily by **cascaded**\
-    (1) to access PKCS#11 compatible HSMs.
+    **cascade-hsm-bridge** is a KMIP to PKCS#11 bridge used primarily by
+    **cascaded**\ (1) to access PKCS#11 compatible HSMs.
 
 For more information about Cascade, please refer to the Cascade documentation
 at https://cascade.docs.nlnetlabs.nl.

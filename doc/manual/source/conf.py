@@ -235,7 +235,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('man/cascade-hsm-bridge', 'cascade-hsm-bridge', 'A KMIP to PKCS#11 relay', author, 1),
+    ('man/cascade-hsm-bridge', 'cascade-hsm-bridge', 'A KMIP to PKCS#11 bridge', author, 1),
     ('man/cascade-hsm-bridge-config.toml', 'cascade-hsm-bridge-config.toml', 'cascade-hsm-bridge configuration file', author, 5),
 ]
 

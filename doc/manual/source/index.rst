@@ -1,5 +1,5 @@
-A KMIP to PKCS#11 Relay
-=======================
+A KMIP to PKCS#11 Bridge
+========================
 
 .. only:: html
 
@@ -29,9 +29,9 @@ format and executes them against a loaded PKCS#11 library.
 Installing or building
 ----------------------
 
-As the KMIP to PKCS#11 relay (:program:`cascade-hsm-bridge`) is currently only intended for use
-with `Cascade`_, please refer to the
-installation or building instructions of Cascade `here
+As the KMIP to PKCS#11 bridge (:program:`cascade-hsm-bridge`)
+is currently only intended for use with `Cascade`_, please refer
+to the installation or building instructions of Cascade `here
 <https://cascade.docs.nlnetlabs.nl/en/latest/installation.html>`_.
 
 Use Cases
@@ -59,10 +59,11 @@ itself which can be confusing.
 Other use cases
 """""""""""""""
 
-This project could potentially act as the basis for a general purpose KMIP to
-PKCS#11 relay. However, at present and for the foreseeable future we plan only
-to implement the tiny fraction of the KMIP specification needed by the Cascade
-project, and the only KMIP client that will be tested against will be Cascade.
+This project could potentially act as the basis for a general purpose KMIP
+to PKCS#11 bridge. However, at present and for the foreseeable future we plan
+only to implement the tiny fraction of the KMIP specification needed by the
+Cascade project, and the only KMIP client that will be tested against will
+be Cascade.
 
 Technical foundations
 """""""""""""""""""""

@@ -12,7 +12,7 @@ https://www.softhsm.org/.
 .. note::
 
    **cascade-hsm-bridge** does NOT come with any PKCS#11 modules pre-supplied.
-   The PKCS#11 module to use must match the HSM you wish to relay connections
+   The PKCS#11 module to use must match the HSM you wish to bridge connections
    to. The PKCS#11 module is normally supplied by the HSM vendor. Please
    contact your HSM vendor for assistance if needed.
 

@@ -109,8 +109,6 @@ The ``[daemon]`` section.
    where files are looked for. Use absolute path names in configuration
    to avoid ambiguities.
 
-.. TODO: Link to a dedicated systemd / daemonization guide for **cascade-hsm-bridge**.
-
 .. option:: pid-file = "/var/run/cascade-hsm-bridge.pid"
 
    The path to a PID file to maintain, if any.
@@ -141,8 +139,23 @@ The ``[pkcs11]`` section.
 
 .. option:: lib-path = "/path/to/your/pkcs11/module.so"
 
-    The path to the PKCS#11 module (e.g. a .so file on Linux systems) to load
-    in order to communicate with an HSM. (REQUIRED)
+   The path to the PKCS#11 module (e.g. a .so file on Linux systems) to load
+   in order to communicate with an HSM. (REQUIRED)
+
+   .. NOTE:: PKCS#11 modules often have additional required setup steps
+             in order to use them which vary by module. For example the
+             OpenSC PKCS11-Spy module requires a an environment variable
+             PKCS11SPY=/path/to/pkcs11-module-to-load.so. Failure to meet
+             some prerequisite often results in an uninformative error such
+             as failure to initialize the module. Additional information may
+             be available in a module specific location, e.g. standard error
+             output or syslog.
+
+   .. NOTE:: When ``daemonize`` is set to true the standard error file
+             descriptor will be closed and any logs sent to it by the PKCS#11
+             module will be lost. Setting ``daemonize`` to false can help
+             when investigating issues to see additional logging about the
+             problem.`
 
 
 KMIP server TCP settings.

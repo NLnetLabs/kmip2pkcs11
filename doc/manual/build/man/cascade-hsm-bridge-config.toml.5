@@ -202,6 +202,31 @@ The \fB[pkcs11]\fP section.
 .B lib\-path = \(dq/path/to/your/pkcs11/module.so\(dq
 The path to the PKCS#11 module (e.g. a .so file on Linux systems) to load
 in order to communicate with an HSM. (REQUIRED)
+.sp
+\fBNOTE:\fP
+.INDENT 7.0
+.INDENT 3.5
+PKCS#11 modules often have additional required setup steps
+in order to use them which vary by module. For example the
+OpenSC PKCS11\-Spy module requires a an environment variable
+PKCS11SPY=/path/to/pkcs11\-module\-to\-load.so. Failure to meet
+some prerequisite often results in an uninformative error such
+as failure to initialize the module. Additional information may
+be available in a module specific location, e.g. standard error
+output or syslog.
+.UNINDENT
+.UNINDENT
+.sp
+\fBNOTE:\fP
+.INDENT 7.0
+.INDENT 3.5
+When \fBdaemonize\fP is set to true the standard error file
+descriptor will be closed and any logs sent to it by the PKCS#11
+module will be lost. Setting \fBdaemonize\fP to false can help
+when investigating issues to see additional logging about the
+problem.\(ga
+.UNINDENT
+.UNINDENT
 .UNINDENT
 .SS KMIP server TCP settings.
 .sp

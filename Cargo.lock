@@ -370,7 +370,8 @@ dependencies = [
 [[package]]
 name = "daemonbase"
 version = "0.1.5"
-source = "git+https://github.com/NLnetLabs/daemonbase?branch=main#45343c79789f3a67b1257d31037cfeafbaa8a2c9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e29c87bcc36838764873fe444d395967f28ba57c0d661aaac2495ac84b9614e4"
 dependencies = [
  "clap",
  "jiff",

@@ -163,7 +163,7 @@ checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
 name = "cascade-hsm-bridge"
-version = "0.1.0-alpha"
+version = "0.1.0-beta"
 dependencies = [
  "bcder",
  "cascade-hsm-bridge-cfg",
@@ -194,7 +194,7 @@ dependencies = [
 
 [[package]]
 name = "cascade-hsm-bridge-cfg"
-version = "0.1.0-alpha"
+version = "0.1.0-beta"
 dependencies = [
  "clap",
  "daemonbase",

@@ -6,6 +6,7 @@ pkg:
 image:
   - "ubuntu:jammy"    # ubuntu/22.04
   - "ubuntu:noble"    # ubuntu/24.04
+  - "ubuntu:resolute" # ubuntu/26.04
   - "debian:buster"   # debian/10
   - "debian:bullseye" # debian/11
   - "debian:bookworm" # debian/12
@@ -43,8 +44,8 @@ test-mode:
   - 'fresh-install'
 # - 'upgrade-from-published'
 
-# # Disable upgrade testing on Ubuntu Noble as we haven't published any packages for
-# # those O/S versions yet.
+# # Disable upgrade testing on Ubuntu Noble as we haven't yet published a version that we support upgrading
+# # from.
 # test-exclude:
 #   - pkg: 'kmi2pkcs11'
 #     image: 'ubuntu:noble'

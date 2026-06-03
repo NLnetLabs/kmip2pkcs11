@@ -145,9 +145,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.11.1"
+version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
+checksum = "84d7ced0ae9557296835c32bf1b1e02b44c746701f898460fb000d7eaa84f00a"
 
 [[package]]
 name = "bumpalo"
@@ -426,7 +426,8 @@ dependencies = [
 [[package]]
 name = "domain"
 version = "0.12.1"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=main#08189fcc5553f0142041f871b92a83463d156fc6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c469892dddfeff64ecfdbc64cf059c77fb0decaeccd4d5d484394bdd6312bac"
 dependencies = [
  "bumpalo",
  "bytes",
@@ -443,7 +444,7 @@ dependencies = [
 [[package]]
 name = "domain-kmip"
 version = "0.0.1"
-source = "git+https://github.com/NLnetLabs/domain-kmip.git?branch=main#efb1a8674ef034ebf45c8f205b7d9a53b36e5e1d"
+source = "git+https://github.com/NLnetLabs/domain-kmip.git?branch=main#bb0da8603febd184c2bae6998d81da81d8570c9c"
 dependencies = [
  "bcder",
  "domain",
@@ -456,7 +457,8 @@ dependencies = [
 [[package]]
 name = "domain-macros"
 version = "0.12.1"
-source = "git+https://github.com/NLnetLabs/domain.git?branch=main#08189fcc5553f0142041f871b92a83463d156fc6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fef7ef74e413e36d5364db163ca577ccb56f2f74377705d5f920ee3e1544127"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -951,9 +953,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.30"
+version = "0.4.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
+checksum = "113b30b4cd05f7c06868fdb2854f66a7b9fece9a48425351cd532e810d74024f"
 
 [[package]]
 name = "maybe-async"
@@ -1655,7 +1657,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.2",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
@@ -1897,9 +1899,9 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.23.1"
+version = "1.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddd74a9687298c6858e9b88ec8935ec45d22e8fd5e6394fa1bd4e99a87789c76"
+checksum = "d258b83ceec21034727ecee8c382cfa6c3e133699b0742c64571814fb420c9f7"
 dependencies = [
  "getrandom 0.4.2",
  "js-sys",
@@ -2355,18 +2357,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.49"
+version = "0.8.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bce33a6288fa3f072a8c2c7d0f2fdbb90e28298f0135c1f99b96c3db2efcc60b"
+checksum = "3b065d4f0e55f82fae73202e189638116a87c55ab6b8e6c2721e13dd9d854ad1"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.49"
+version = "0.8.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd425244944f4ab65ccff928e7323354c5a018c75838362fdce749dfad2ee1e"
+checksum = "0b631b19d36a892ab55420c92dbc83ccd79274f25be714855d3074aa71cab639"
 dependencies = [
  "proc-macro2",
  "quote",

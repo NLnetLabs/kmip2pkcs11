@@ -135,6 +135,7 @@ license-file = ["LICENSE", "0"]
 extended-description = """\
 A bridge for connecting OASIS KMIP compatible HSM clients to PKCS#11 compatible HSMs."""
 depends = "$auto, adduser"
+replaces = "kmip2pkcs11"
 section = "net"
 priority = "optional"
 maintainer-scripts = "pkg/debian"
@@ -172,3 +173,7 @@ assets = [
 # ensure that the useradd and rsync tools are present by installing their respective packages
 [package.metadata.generate-rpm.requires]
 shadow-utils = "*"
+
+# replace any prior installation of kmi2pkcs11, our former name
+[package.metadata.generate-rpm.obsoletes]
+kmip2pkcs11 = "*"

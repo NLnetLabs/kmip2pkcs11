@@ -16,7 +16,7 @@ Released yyyy-mm-dd.
 
 ## 0.1.0-beta
 
-Released yyyy-mm-dd.
+Released 2026-06-03.
 
 ### Breaking changes
 

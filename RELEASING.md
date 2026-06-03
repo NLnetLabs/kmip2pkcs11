@@ -1,0 +1,13 @@
+- create a release branch
+- cargo update
+- bump version in Cargo.toml
+- add new O/S versions in pkg/rules/packages-to-build.yml
+- update Changelog.md
+- cd doc/man && make man && git add the generated .N man page files
+- git commit
+- cargo package (to test that it works)
+- git push
+- in GH UI invoke the packaging workklow on the release branch
+- create and push git release tag
+- cargo publish
+- publish binary (DEB, RPM) packages via packaging VM

@@ -15,4 +15,4 @@ version = "v1"
 [daemon]
 log-level = "info"
 log-target = { type = "syslog" }
-daemonize = true
+daemonize = false

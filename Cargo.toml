@@ -135,7 +135,12 @@ license-file = ["LICENSE", "0"]
 extended-description = """\
 A bridge for connecting OASIS KMIP compatible HSM clients to PKCS#11 compatible HSMs."""
 depends = "$auto, adduser"
+
+# Instruct APT to replace the kmip2pkcs11 package with the new cascade-hsm-bridge package.
+# See: https://www.debian.org/doc/debian-policy/ch-relationships.html#replacing-whole-packages-forcing-their-removal
+conflicts = "kmip2pkcs11"
 replaces = "kmip2pkcs11"
+
 section = "net"
 priority = "optional"
 maintainer-scripts = "pkg/debian"
@@ -174,6 +179,6 @@ assets = [
 [package.metadata.generate-rpm.requires]
 shadow-utils = "*"
 
-# replace any prior installation of kmi2pkcs11, our former name
+# Instruct RPM/YUM to replace the kmip2pkcs11 package with the new cascade-hsm-bridge package.
 [package.metadata.generate-rpm.obsoletes]
 kmip2pkcs11 = "*"

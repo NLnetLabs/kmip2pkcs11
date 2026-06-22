@@ -33,8 +33,8 @@ Options
 
 .. option:: -c, --config <PATH>
 
-          The configuration file to load. Defaults to
-          ``/etc/cascade-hsm-bridge/config.toml``.
+          The configuration file to load. Required unless ``--lib-path``
+		  is specified.
 
 .. option:: --log-level <LEVEL>
 
@@ -54,6 +54,16 @@ Options
           the working directory to the root directory and as such influences
           where files are looked for. Use absolute path names in configuration
           to avoid ambiguities.
+
+.. option:: --lib-path
+
+          The PKCS#11 library file to load. If specified the ``--config`` file
+		  argument can be omitted in which case the default configuration settings
+		  will be used with the exception that the PKCS#11 file to load will be
+		  taken from the value of this command line argument.
+
+		  .. note:: You can also supply this command line argument value by seting
+		            the CASCADE_HSM_BRIDGE_PKCS11_LIB_PATH environment variable.`
 
 .. option:: -h, --help
 

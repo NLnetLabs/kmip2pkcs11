@@ -14,7 +14,25 @@ Released yyyy-mm-dd.
 ### Acknowledgements
 -->
 
-## 0.1.0-beta
+## Unreleased version
+
+Released yyyy-mm-dd.
+
+### Breaking changes
+
+### New
+
+### Bug fixes
+
+### Other changes
+
+### Documentation improvements
+
+### Known issues
+
+### Acknowledgements
+
+## 0.1.0-beta1
 
 Released 2026-06-03.
 

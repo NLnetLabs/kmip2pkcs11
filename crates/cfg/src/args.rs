@@ -13,16 +13,27 @@ use crate::v1::{LogLevel, LogTarget};
 
 pub struct Args {
     /// The configuration file to load.
-    pub config: PathBuf,
+    pub config: Option<PathBuf>,
 
     /// The minimum severity of messages to log.
+    ///
+    /// Overrides the `[daemon.log.level]` config setting.
     pub log_level: Option<LogLevel>,
 
     /// The target of log messages.
+    ///
+    /// Overrides the `[daemon.log.target]` config setting.
     pub log_target: Option<LogTarget>,
 
     /// Whether cascade-hsm-bridge should fork on startup.
+    ///
+    /// Overrides the `[daemon.daemonize]` config setting.
     pub daemonize: bool,
+
+    /// Path to the PKCS#11 library to load.
+    ///
+    /// Overrides the `[pkcs11.lib-path]` config setting.
+    pub pkcs11_lib_path: Option<PathBuf>,
 }
 
 impl Args {
@@ -35,7 +46,7 @@ impl Args {
                 .value_name("PATH")
                 .value_parser(ValueParser::new(PathBufValueParser::new()))
                 .value_hint(ValueHint::FilePath)
-                .required(true)
+                .required_unless_present("pkcs11-lib-path")
                 .help("The configuration file to load"),
             Arg::new("log_level")
                 .long("log-level")
@@ -53,6 +64,14 @@ impl Args {
                 .long("daemonize")
                 .action(clap::ArgAction::SetTrue)
                 .help("Whether cascade-hsm-bridge should fork on startup"),
+            Arg::new("pkcs11-lib-path")
+                .long("lib-path")
+                .value_name("PKCS11_LIB_PATH")
+                .env("CASCADE_HSM_BRIDGE_PKCS11_LIB_PATH")
+                .value_hint(ValueHint::FilePath)
+                .required(false)
+                .help("Path to the PKCS#11 library to load")
+                .long_help("Overrides the `[pkcs11.lib-path]` config setting"),
         ])
     }
 
@@ -61,11 +80,13 @@ impl Args {
         Self {
             config: matches
                 .get_one::<PathBuf>("config")
-                .map(|p| p.as_path().into())
-                .expect("The Clap required flag should have prevented this happening"),
+                .map(|p| p.as_path().into()),
             log_level: matches.get_one::<LogLevel>("log_level").copied(),
             log_target: matches.get_one::<LogTarget>("log_target").cloned(),
             daemonize: matches.get_flag("daemonize"),
+            pkcs11_lib_path: matches
+                .get_one::<String>("pkcs11-lib-path")
+                .map(|p| p.into()),
         }
     }
 
@@ -81,6 +102,9 @@ impl Args {
                 }
                 if self.daemonize {
                     config.daemon.daemonize = true;
+                }
+                if let Some(pkcs11_lib_path) = self.pkcs11_lib_path {
+                    config.pkcs11.lib_path = pkcs11_lib_path;
                 }
             }
         }

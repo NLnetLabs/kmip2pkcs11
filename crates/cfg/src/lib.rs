@@ -35,6 +35,18 @@ impl Config {
         let toml_str = std::fs::read_to_string(path).unwrap();
         Self::from_toml(&toml_str, None::<PathBuf>).map_err(|err| err.to_string())
     }
+
+    /// Creates a configuration from defaults with the required settings set
+    /// from provided arguments.
+    pub fn new<P: Into<PathBuf>>(pkcs11_lib_path: P) -> Self {
+        Self::V1(v1::Config {
+            daemon: Default::default(),
+            pkcs11: v1::Pkcs11Config {
+                lib_path: pkcs11_lib_path.into(),
+            },
+            server: Default::default(),
+        })
+    }
 }
 
 impl From<v1::Config> for Config {

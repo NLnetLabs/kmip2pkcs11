@@ -58,9 +58,18 @@ fn main() -> Result<(), ExitError> {
     );
 
     // Load the config file.
-    let mut config = cascade_hsm_bridge_cfg::Config::from_file(&args.config)
-        .inspect_err(|err| error!("Invalid configuration file: {err}"))
-        .map_err(|_| Failed)?;
+    let mut config = match args.config {
+        Some(ref config_path) => cascade_hsm_bridge_cfg::Config::from_file(config_path)
+            .inspect_err(|err| error!("Invalid configuration file: {err}"))
+            .map_err(|_| Failed)?,
+        None => {
+            let pkcs11_lib_path = args
+                .pkcs11_lib_path
+                .as_ref()
+                .expect("The Clap flags should have prevented this from happening");
+            cascade_hsm_bridge_cfg::Config::new(pkcs11_lib_path)
+        }
+    };
 
     if matches.get_flag("check_config") {
         // The configuration was loaded successfully; stop now.

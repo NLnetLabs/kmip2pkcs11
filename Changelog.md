@@ -22,6 +22,10 @@ Released yyyy-mm-dd.
 
 ### New
 
+- Enable Clap `wrap_help` feature like Cascade. ([#50] by @ximon18)
+- Add --lib-path and CASCADE_HSM_BRDIGE_PKCS11_LIB_PATH env var support.
+  ([#51] by @ximon18)
+
 ### Bug fixes
 
 ### Other changes
@@ -31,6 +35,9 @@ Released yyyy-mm-dd.
 ### Known issues
 
 ### Acknowledgements
+
+[#50]: https://github.com/NLnetLabs/cascade-hsm-bridge/pull/50
+[#51]: https://github.com/NLnetLabs/cascade-hsm-bridge/pull/51
 
 ## 0.1.0-beta1
 

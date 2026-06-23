@@ -32,7 +32,12 @@ impl Config {
 
     /// Creates a configuration from a configuration file.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
-        let toml_str = std::fs::read_to_string(path).unwrap();
+        let toml_str = std::fs::read_to_string(&path).map_err(|err| {
+            format!(
+                "Unable to open config file '{}': {err}",
+                path.as_ref().display()
+            )
+        })?;
         Self::from_toml(&toml_str, None::<PathBuf>).map_err(|err| err.to_string())
     }
 

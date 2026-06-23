@@ -31,7 +31,13 @@ impl From<pkcs11::error::Error> for ExitError {
     }
 }
 
-fn main() -> Result<(), ExitError> {
+fn main() {
+    if let Err(err) = _main() {
+        err.exit()
+    }
+}
+
+fn _main() -> Result<(), ExitError> {
     Logger::init_logging()?;
 
     // Parse command-line arguments.

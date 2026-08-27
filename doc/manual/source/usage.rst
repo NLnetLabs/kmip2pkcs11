@@ -25,10 +25,10 @@ https://www.softhsm.org/.
 For **cascade-hsm-bridge** to be able to use your PKCS#11 module to
 communicate with your HSM you MUST ensure that any configuration files,
 environment variables or other prerequisites needed by your PKCS#11 module
-have been setup correctly. Please consult the documentation for your PKCS#11
+have been set up correctly. Please consult the documentation for your PKCS#11
 module to determine what setup is required.
 
-Once the configuration file has been correctly setup you can launch
+Once the configuration file has been correctly set up you can launch
 ``cascade-hsm-bridge --config /path/to/your/config/file``. Either launch it as
 the correct user that has the necessary access rights required by your PKCS#11
 module, or launch it as root and configure it to change user and group to
@@ -36,7 +36,7 @@ become the required user and group immediately after startup.
 
 The expected usage is to run **cascade-hsm-bridge** as a background daemon
 process, either by having it daemonize itself, or by running it via a service
-manager sucih as systemd. Logs are typically sent to syslog or the systemd
+manager such as systemd. Logs are typically sent to syslog or the systemd
 journal.
 
 Behaviour
@@ -59,9 +59,10 @@ PKCS#11 module and HSM, the Yubico output here is just an example)::
 Authentication
 --------------
 
-Requests to the PKCS#11 module are authenticated by "slot" and "PIN". The
-"slot" and "PIN" values to use are taken from the username and password
-supplied by the received KMIP request.
+Requests to the PKCS#11 module are authenticated by:
+
+* One of: token label, slot ID, slot index. Taken from the *username* field of the KMIP request.
+* User PIN. Taken from the *password* field of the KMIP request.
 
 Further reading
 ---------------

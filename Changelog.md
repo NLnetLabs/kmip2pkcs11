@@ -33,13 +33,19 @@ Released yyyy-mm-dd.
 
 ### Documentation improvements
 
+- Clarify PKCS#11 authentication. ([#58] by @thgoebel)
+
 ### Known issues
 
 ### Acknowledgements
 
+Thanks to @thgoebel for testing Cascade-HSM-Bridge and providing
+valuable feedback and contributing documentation improvements!
+
 [#50]: https://github.com/NLnetLabs/cascade-hsm-bridge/pull/50
 [#51]: https://github.com/NLnetLabs/cascade-hsm-bridge/pull/51
 [#52]: https://github.com/NLnetLabs/cascade-hsm-bridge/pull/52
+[#58]: https://github.com/NLnetLabs/cascade-hsm-bridge/pull/58
 
 ## 0.1.0-beta1
 

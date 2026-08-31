@@ -16,7 +16,8 @@ use tokio_rustls::server::TlsStream;
 use tracing::{Level, debug, enabled, error, info, warn};
 
 use crate::kmip::operations::{
-    activate, create_key_pair, discover_versions, get, modify_attribute, query, sign, unknown,
+    activate, create_key_pair, discover_versions, get, get_attributes, modify_attribute, query,
+    sign, unknown,
 };
 use crate::kmip::util::{mk_err_batch_item, mk_kmip_hex_dump, mk_response};
 use crate::pkcs11::util::Pkcs11Pools;
@@ -241,6 +242,7 @@ fn process_request(
                         Operation::CreateKeyPair => create_key_pair::op(pkcs11conn, batch_item),
                         Operation::DiscoverVersions => discover_versions::op(batch_item),
                         Operation::Get => get::op(pkcs11conn, batch_item),
+                        Operation::GetAttributes => get_attributes::op(batch_item),
                         Operation::ModifyAttribute => modify_attribute::op(pkcs11conn, batch_item),
                         Operation::Sign => sign::op(pkcs11conn, batch_item),
                         _ => unknown::op(batch_item),
